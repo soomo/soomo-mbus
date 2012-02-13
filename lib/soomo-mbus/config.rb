@@ -26,7 +26,7 @@ module Mbus
     end 
     
     def self.exchanges
-      config, exchanges = ENV['MBUS_CONFIG'], ['soomo']
+      config, exchanges = ENV['MBUS_CONFIG'], []
       if config
         config.split(entry_delimiter).each { | entry_value |
           entry = ConfigEntry.new(entry_value)

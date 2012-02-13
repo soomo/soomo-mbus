@@ -25,8 +25,7 @@ describe Mbus::Config do
   
   it 'should return the default exchanges' do
     ENV['MBUS_CONFIG'] = nil 
-    Mbus::Config.exchanges.size.should == 1
-    Mbus::Config.exchanges[0].should == 'soomo'
+    Mbus::Config.exchanges.size.should == 0
   end
   
   it 'should return the exchanges per the environment variable' do
