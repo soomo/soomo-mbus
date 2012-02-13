@@ -10,15 +10,17 @@ module Mbus
     
     @@exchanges, @@queues = {}, {}
     
-    def self.initialize(is_consumer=true)
+    def self.initialize(is_consumer=true, init_exchanges=true)
       @@url = Mbus::Config.rabbitmq_url
       config = Mbus::Config.mbus_config
       puts "Mbus::Io.initialize, URL: #{@@url} Config: #{config}"
       @@bunny = Bunny.new(@@url)
       @@bunny.start
-      Mbus::Config.exchanges.each { | exch_name |
-        initialize_exchange(exch_name, is_consumer)
-      }
+      if init_exchanges
+        Mbus::Config.exchanges.each { | exch_name |
+          initialize_exchange(exch_name, is_consumer)
+        }
+      end
       puts "Mbus::Io.initialize complete - exchanges: #{@@exchanges.size}, queues: #{@@queues.size}"
     end
     
@@ -41,6 +43,11 @@ module Mbus
           }
         end 
       end
+    end
+    
+    def self.delete_exchange(exch_name, opts = {})
+      exchange = @@bunny.exchange(exch_name, {:type => :topic})
+      (exchange.nil?) ? nil : exchange.delete(opts)
     end
     
     def self.send_message(exch_name, msg, routing_key)

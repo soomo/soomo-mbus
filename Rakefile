@@ -181,6 +181,18 @@ namespace :mbus do
     }
     Mbus::Io.shutdown
   end 
+
+  desc "Delete the given exchange, e="
+  task :delete_exchange => :environment do 
+    Mbus::Io.initialize(false, false)
+    exch_name = ENV['e']
+    if exch_name
+      result = Mbus::Io.delete_exchange(exch_name, {})
+      puts "result for deleting exchange #{exch_name}: #{result}"
+    else
+      puts "No exchange name provided, use the e= arg."
+    end
+  end
   
   desc "Start the SampleConsumerProcess"
   task :sample_process => :environment do
