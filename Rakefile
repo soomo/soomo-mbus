@@ -8,7 +8,7 @@ require 'bunny'
 require 'json' 
 require 'rspec/core/rake_task'
 require 'sqlite3'
-require 'message-bus'
+require 'soomo-mbus'
 
 # example code
 require 'vote'
@@ -267,5 +267,4 @@ def establish_db_connection
     puts "ERROR: DB connection NOT established to '#{db_config['database']}' in env '#{env}'" 
     false
   end
-end 
-  
+end

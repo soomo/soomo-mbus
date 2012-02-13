@@ -4,7 +4,7 @@ module Mbus
   #
   # Internal: This class, Mbus::Io, is used to perform Io with rabbitmq. 
   #
-  # Chris Joakim, Locomotive LLC, 2012/02/11
+  # Chris Joakim, Locomotive LLC, 2012/02/13
 
   class Io 
     

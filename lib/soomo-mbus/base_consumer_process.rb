@@ -4,7 +4,7 @@ module Mbus
   #
   # Internal: 
   #
-  # Chris Joakim, Locomotive LLC, 2012/02/11
+  # Chris Joakim, Locomotive LLC, 2012/02/13
   
   class BaseConsumerProcess
 

@@ -5,7 +5,7 @@ module Mbus
   # Internal: This class, Mbus::Config, is be used to obtain configuration
   # values used in this gem, such as for rabbitmq.
   #
-  # Chris Joakim, Locomotive LLC, 2012/02/11
+  # Chris Joakim, Locomotive LLC, 2012/02/13
 
   class Config
 
