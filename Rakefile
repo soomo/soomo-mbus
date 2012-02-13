@@ -75,27 +75,6 @@ namespace :db do
 end
 
 namespace :mbus do
-
-  task :sample_json_env_var => :environment do
-    data = {}
-    10.times do | i |
-      hash = {}
-      10.times do | j |
-        hash["key#{j}"] = "#{i}-#{j}"
-      end
-      data["hash#{i}"] = hash
-    end 
-    json = data.to_json
-    json = json.tr(" ", "")
-    puts "json: #{json.size} #{json}"
-    puts "---"
-    obj = JSON.parse(ENV['MBUS_JSON'])
-    puts obj.inspect
-    puts "---" 
-    json = obj.to_json
-    json = json.tr(" ", "")
-    puts "json: #{json.size} #{json}"
-  end
   
   desc "Create the MBUS_CONFIG environment variable value"
   task :create_mbus_config => :environment do
