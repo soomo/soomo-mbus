@@ -13,15 +13,15 @@ module Mbus
     attr_reader :db_disconnected_count, :db_disconnect_sleep_time
     
     def default_exchange
-      'soomo'
+      nil
     end
     
     def default_queue
       nil
     end
     
-    def initialize
-      base_initialize
+    def initialize(test_mode=false)
+      base_initialize if !test_mode
     end 
     
     def base_initialize

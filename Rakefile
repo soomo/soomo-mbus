@@ -100,8 +100,10 @@ namespace :mbus do
   end
   
   desc "Display the MBUS_CONFIG and RABBITMQ_URL values"
-  task :display_mbus_config => :environment do
-    puts "mbus_config:  #{Mbus::Config.mbus_config}"
+  task :display_mbus_config => :environment do 
+    puts "mbus version: #{Mbus::VERSION}" 
+    puts "mbus config:  #{Mbus::Config.mbus_config}"
+    puts "exchanges: #{Mbus::Config.exchanges.inspect}"
     Mbus::Config.exchanges.each { | exch |
       puts "exchange: #{exch}"
       Mbus::Config.exch_entries(exch).each { | entry |
