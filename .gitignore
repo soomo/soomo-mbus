@@ -1,7 +1,8 @@
 .DS_Store
 **/.DS_Store
-txt_merged.txt
 **/txt_merged.txt
 db/*.sqlite3
+Gemfile.lock
 pkg/
+txt_merged.txt
 
