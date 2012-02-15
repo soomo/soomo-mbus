@@ -4,54 +4,54 @@ module Mbus
   #
   # Internal: 
   #
-  # Chris Joakim, Locomotive LLC, 2012/02/13
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/14
   
   class BaseConsumerProcess
-
+    
+    attr_reader :options
     attr_reader :exchange_name, :queue_name, :sleep_time
-    attr_reader :continue_to_process, :messages_read, :verbose 
+    attr_reader :continue_to_process, :messages_read 
     attr_reader :db_disconnected_count, :db_disconnect_sleep_time
     
-    def default_exchange
-      nil
-    end
-    
-    def default_queue
-      nil
-    end
-    
-    def initialize(test_mode=false)
-      base_initialize if !test_mode
+    def initialize(opts={})
+      base_initialize(opts)
     end 
     
-    def base_initialize
-      @exchange_name = ENV['EXCHANGE'] ||= default_exchange
-      @queue_name    = ENV['QUEUE'] ||= default_queue
+    def base_initialize(opts={})
+      @options = opts
+      Mbus::Io.initialize(@options)
+      
+      @exchange_name = Mbus::Config.consumer_exchange
+      @queue_name    = Mbus::Config.consumer_queue
       if exchange_name.nil? || queue_name.nil?
         puts "#{classname}.base_initialize FATAL CONFIG ERROR - nil exchange and/or queue values: '#{exchange_name}', '#{queue_name}'.  Exiting..."
         exit
       end
-      @verbose = to_bool(ENV['VERBOSE'])
       @sleep_time = init_queue_empty_sleep_time
-      @continue_to_process = true
       @db_disconnect_sleep_time = init_db_disconnected_sleep_time
-      @messages_read, @db_disconnected_count = 0, 0 
+      @continue_to_process, @messages_read, @db_disconnected_count = true, 0, 0 
       puts "#{classname}.base_initialize exchange: #{exchange_name} queue: #{queue_name} st: #{sleep_time} db: #{database_url}"
-
-      Mbus::Io.initialize
-      establish_db_connection if use_database?
+      
+      unless test_mode?
+        Mbus::Io.start  
+        establish_db_connection if use_database?
+      end
       puts "#{classname}.base_initialize completed"
     end
 
     def init_queue_empty_sleep_time
-      value = ENV['SLEEP_TIME'] ||= '10'
+      value = ENV['MBUS_QE_TIME'] ||= '10'
       (value.downcase == 'stop') ? -1 : value.to_i
     end
     
-    def init_db_disconnected_sleep_time
-      value = ENV['DB_DISCONNECT_SLEEP_TIME'] ||= '15'
+    def init_db_disconnected_sleep_time 
+      value = ENV['MBUS_DBC_TIME'] ||= '15'  
       value.to_i 
-    end 
+    end
+    
+    def test_mode?
+      @options[:test_mode] # presence = truth
+    end
 
     def shutdown
       base_shutdown
@@ -63,9 +63,9 @@ module Mbus
       puts "#{classname}.base_shutdown completed"
     end
   
-    def process_loop(test_mode=false)
+    def process_loop
       while continue_to_process
-        @continue_to_process = false if test_mode
+        @continue_to_process = false if test_mode?
         msg = Mbus::Io.read_message(exchange_name, queue_name)
         if (msg == :queue_empty) || msg.nil?
           handle_no_message
@@ -135,7 +135,7 @@ module Mbus
     end
     
     def database_url
-      env_var_name = ENV['DB'] ||= 'DATABASE_URL'
+      env_var_name = ENV['MBUS_DB'] ||= 'DATABASE_URL'
       (env_var_name.to_s.downcase == 'none') ? 'none' : ENV[env_var_name]
     end
     
@@ -144,7 +144,8 @@ module Mbus
     end
 
     def establish_db_connection
-      db_url = database_url 
+      db_url = database_url
+      return if db_url == 'none' 
       db = URI.parse(db_url)
       ActiveRecord::Base.establish_connection(
         :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,

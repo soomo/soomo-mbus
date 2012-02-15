@@ -54,9 +54,9 @@ namespace :db do
   end
 
   desc "Create a Vote; vname=hillary cname=obama destroy="
-  task :create_vote do
-    Mbus::Io.initialize
-    # rake db:create_vote vname=hillary cname=obama
+  task :create_vote do 
+    opts = init_options
+    Mbus::Io.initialize(opts, true)
     if establish_db_connection
       vote = Vote.new do |v|
         v.voter_name = ENV['vname']
@@ -76,18 +76,11 @@ end
 
 namespace :mbus do
   
-  desc "Create the MBUS_CONFIG environment variable value"
+  desc "Create the default config environment variable value"
   task :create_mbus_config => :environment do
     sio = StringIO.new
     entries = %w(
-      soomo,all,s.#
-      soomo,rake,s.rake.*
-      soomo,activity,s.activity.*
-      soomo,email,s.email.*
-      soomo,discussion,s.discussion.*
-      soomo,response,s.response.*
-      blackboard,push,b.grade.*
-      customers,student,c.student.*
+      test_exch,test_queue,produce,test.*
     ) 
     max_idx = entries.size - 1
     entries.each_with_index { | entry, idx | 
@@ -95,14 +88,16 @@ namespace :mbus do
       sio << '/' if idx < max_idx
     }
     puts ""
-    puts "MBUS_CONFIG=#{sio.string}"
+    puts "#{Mbus::Config::DEFAULT_CONFIG_ENV_VAR}=#{sio.string}"
     puts ""
   end
   
-  desc "Display the MBUS_CONFIG and RABBITMQ_URL values"
-  task :display_mbus_config => :environment do 
-    puts "mbus version: #{Mbus::VERSION}" 
-    puts "mbus config:  #{Mbus::Config.mbus_config}"
+  desc "Display the mbus config and RABBITMQ_URL values"
+  task :display_mbus_config => :environment do
+    Mbus::Config.initialize  
+    puts "mbus version: #{Mbus::VERSION}"
+    puts "env var name: #{Mbus::Config.config_env_var_name}" 
+    puts "config value: #{Mbus::Config.config_value}"
     puts "exchanges: #{Mbus::Config.exchanges.inspect}"
     Mbus::Config.exchanges.each { | exch |
       puts "exchange: #{exch}"
@@ -116,7 +111,9 @@ namespace :mbus do
   
   desc "Display the status of the Mbus"
   task :display_mbus_status => :environment do
-    Mbus::Io.initialize
+    opts = init_options
+    opts[:action] = 'status'
+    Mbus::Io.initialize(opts, true)
     hash = Mbus::Io.status
     hash.keys.sort.each { | fname | 
       puts "exch/queue #{fname} = #{hash[fname]}"
@@ -130,7 +127,8 @@ namespace :mbus do
     count  = ENV['n'] ||= '1'
     key    = ENV['k'] ||= 'rake.message'
     actual = 0
-    Mbus::Io.initialize(false)
+    opts = init_options
+    Mbus::Io.initialize(opts, true)
     count.to_i.times do | i |
       actual = actual + 1
       msg  = create_message(actual, body="msg sent to key #{unwild_key(key)}")
@@ -141,10 +139,11 @@ namespace :mbus do
   
   desc "Read messages; e= q= n= "
   task :read_messages => :environment do 
-    ename = ENV['e'] ||= 'soomo' 
-    qname = ENV['q'] ||= 'rake'
+    ename = ENV['e'] ||= 'test_exch' 
+    qname = ENV['q'] ||= 'test_queue'
     count = ENV['n'] ||= '1'
-    Mbus::Io.initialize
+    opts = init_options
+    Mbus::Io.initialize(opts, true)
     read_loop(ename, qname, count)
     Mbus::Io.shutdown
   end
@@ -153,7 +152,8 @@ namespace :mbus do
   task :send_messages_to_all => :environment do
     count  = ENV['n'] ||= '1'
     actual = 0
-    Mbus::Io.initialize(false)
+    opts = init_options
+    Mbus::Io.initialize(opts, true)
     Mbus::Config.exchanges.each { | exch |
       Mbus::Config.exch_entries(exch).each { | entry |
         if entry.queue != 'all'
@@ -173,7 +173,8 @@ namespace :mbus do
   task :read_messages_from_all => :environment do
     count  = ENV['n'] ||= '1'
     actual = 0
-    Mbus::Io.initialize
+    opts = init_options
+    Mbus::Io.initialize(opts, true)
     Mbus::Config.exchanges.each { | exch |
       Mbus::Config.exch_entries(exch).each { | entry |
         read_loop(entry.exchange, entry.queue, count)
@@ -184,11 +185,13 @@ namespace :mbus do
 
   desc "Delete the given exchange, e="
   task :delete_exchange => :environment do 
-    Mbus::Io.initialize(false, false)
+    opts = init_options
+    opts[:initialize_exchanges] = false
+    Mbus::Io.initialize(opts, true) 
     exch_name = ENV['e']
     if exch_name
       result = Mbus::Io.delete_exchange(exch_name, {})
-      puts "result for deleting exchange #{exch_name}: #{result}"
+      puts "result for deleting exchange '#{exch_name}' = #{result}"
     else
       puts "No exchange name provided, use the e= arg."
     end
@@ -201,6 +204,13 @@ namespace :mbus do
   end 
   
 end 
+
+def init_options
+  opts = {}
+  opts[:rabbitmq_url] = ENV['rmq_url'] if ENV['rmq_url'] 
+  opts[:initialize_exchanges] = ENV['init_exch'] if ENV['init_exch']
+  opts
+end
 
 def to_bool(s)
   s.to_s.downcase == 'true'

@@ -4,32 +4,39 @@ module Mbus
   #
   # Internal: This class, Mbus::Io, is used to perform Io with rabbitmq. 
   #
-  # Chris Joakim, Locomotive LLC, 2012/02/13
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/14 
 
   class Io 
     
     @@exchanges, @@queues = {}, {}
     
-    def self.initialize(is_consumer=true, init_exchanges=true)
-      @@url = Mbus::Config.rabbitmq_url
-      config = Mbus::Config.mbus_config
+    def self.initialize(opts={}, start_bunny=false)
+      @@options = opts
+      Mbus::Config.initialize(@@options)
+      @@url  = Mbus::Config.rabbitmq_url
+      config = Mbus::Config.config_value
       puts "Mbus::Io.initialize, URL: #{@@url} Config: #{config}"
-      @@bunny = Bunny.new(@@url)
-      @@bunny.start
-      if init_exchanges
-        Mbus::Config.exchanges.each { | exch_name |
-          initialize_exchange(exch_name, is_consumer)
-        }
-      end
-      puts "Mbus::Io.initialize complete - exchanges: #{@@exchanges.size}, queues: #{@@queues.size}"
+      start if start_bunny
     end
     
-    def self.initialize_exchange(exch_name, is_consumer=true)
+    def self.start 
+      puts "Mbus::Io.starting"
+      @@bunny = Bunny.new(@@url)
+      @@bunny.start
+      if Mbus::Config.initialize_exchanges?
+        Mbus::Config.exchanges.each { | exch_name |
+          initialize_exchange(exch_name)
+        }
+      end
+      puts "Mbus::Io.start completed"
+    end
+    
+    def self.initialize_exchange(exch_name)
       exchange = @@bunny.exchange(exch_name, {:type => :topic})
       if exchange
         @@exchanges[exch_name] = exchange
         puts "Mbus::Io.initialize_exchange - created exchange '#{exch_name}'"
-        if is_consumer
+        if Mbus::Config.is_consumer?(exch_name)
           entries = Mbus::Config.exch_entries(exch_name)
           entries.each { | entry |
             if @@queues[entry.fullname]
