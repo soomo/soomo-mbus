@@ -28,7 +28,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'sqlite3'
   s.add_development_dependency 'simplecov'
   
-  s.files = []
+  s.files = [] 
+  s.files << 'Rakefile'
   s.files << 'README.md'
   s.files << 'soomo-mbus.gemspec'
   s.files << 'lib/soomo-mbus.rb'
@@ -42,7 +43,9 @@ Gem::Specification.new do |s|
   s.files << 'lib/soomo-mbus/producer.rb'
   s.files << 'lib/soomo-mbus/queue_wrapper.rb'
   s.files << 'lib/soomo-mbus/sample_consumer_process.rb'
-  s.files << 'lib/soomo-mbus/version.rb' 
+  s.files << 'lib/soomo-mbus/version.rb'
+  s.files << 'lib/tasks/mbus.rake' 
+  s.files << 'lib/tasks/mbus_db.rake'
   
   s.test_files = Dir.glob("{spec,test}/**/*.rb")
   

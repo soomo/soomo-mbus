@@ -44,15 +44,11 @@ rake mbus:delete_exchange e=obsolete --trace
 
 echo '---'
 echo '*** send_messages'
-rake mbus:send_messages --trace 
+rake mbus:send_messages n=10 --trace 
 
 echo '---'
 echo '*** read_messages'
-rake mbus:read_messages n=10 --trace
-
-echo '---'
-echo '*** mbus:send_messages_to_all'
-rake mbus:send_messages_to_all n=10 --trace
+rake mbus:read_messages n=8 --trace
 
 echo '---'
 echo '*** sample_process'

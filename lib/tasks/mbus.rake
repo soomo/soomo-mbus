@@ -1,3 +1,11 @@
+
+class SampleProducer
+  include Mbus::Producer
+  def send(obj, action, custom_json_msg_string=nil)
+    mbus_enqueue(obj, action, custom_json_msg_string)
+  end  
+end 
+
 namespace :mbus do
 
   namespace :config do
@@ -111,11 +119,12 @@ namespace :mbus do
     puts "  routing key (k=):   #{key}"
     puts "  message count (n=): #{count}"
     
+    producer = SampleProducer.new
     Mbus::Io.initialize(app, init_options)
     count.to_i.times do | i |
       actual = actual + 1
       msg  = create_message(actual, body="msg sent to key #{unwild_key(key)}")
-      Mbus::Io.send_message(ename, msg.to_json, unwild_key(key))
+      msg_sent = producer.send(msg, "logmessage")
     end
     Mbus::Io.shutdown
   end 
@@ -133,29 +142,6 @@ namespace :mbus do
     puts "  message count (n=):  #{count}"
     Mbus::Io.initialize(app, init_options)
     read_loop(ename, qname, count)
-    Mbus::Io.shutdown
-  end
-  
-  desc "Send messages to all exchanges and keys, n="
-  task :send_messages_to_all => :environment do
-    app    = ENV['app'] ||= 'all' 
-    count  = ENV['n']   ||= '5'
-    actual = 0
-    Mbus::Io.initialize(app, init_options)
-    Mbus::Config.exchange_entries_for_app(app).each { | entry |
-      exch_name = entry['name']
-      Mbus::Config::queues_for_app(app).each { | queue_entry | 
-        if exch_name = queue_entry['exch']
-          count.to_i.times do | i |
-            actual = actual + 1
-            uwk  = unwild_key(queue_entry['key'])
-            body = "Msg #{actual} sent to exch '#{exch_name}' key: '#{uwk}'"
-            msg  = create_message(actual, body) 
-            Mbus::Io.send_message(exch_name, msg.to_json, uwk)
-          end  
-        end
-      }
-    }
     Mbus::Io.shutdown
   end
   
