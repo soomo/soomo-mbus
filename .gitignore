@@ -1,6 +1,6 @@
 .DS_Store
 **/.DS_Store
-**/txt_merged.txt
+coverage/
 db/*.sqlite3
 Gemfile.lock
 pkg/

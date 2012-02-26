@@ -5,13 +5,15 @@ require 'rubygems'
 require 'active_record' 
 require 'bundler/gem_tasks'
 require 'bunny'
-require 'json' 
+require 'json'
+require 'redis' 
 require 'rspec/core/rake_task'
 require 'sqlite3'
+require 'uri'
 require 'soomo-mbus'
 
 # example code
-require 'vote'
+require 'grade'
 
 RSpec::Core::RakeTask.new('spec')
 
@@ -53,21 +55,21 @@ namespace :db do
     end  
   end
 
-  desc "Create a Vote; vname=hillary cname=obama destroy="
-  task :create_vote do 
-    opts = init_options
-    Mbus::Io.initialize(opts, true)
+  desc "Create a Grade(s), n="
+  task :create_grade do
+    count = ENV['n'] ||= '1'  
+    Mbus::Io.initialize('core', init_options)
     if establish_db_connection
-      vote = Vote.new do |v|
-        v.voter_name = ENV['vname']
-        v.candidate_name = ENV['cname'] 
-        v.save!
-        v.candidate_name = ENV['cname']
-        v.save!
-        v.get_lost
-        v.destroy if ENV['destroy'] && ENV['destroy'] == 'true'
+      count.to_i.times do
+        g = Grade.new
+        g.student_id  = rand(1000)
+        g.course_id   = rand(100)
+        g.grade_value = 60 + rand(41)
+        g.save!
+        g.grade_value = 60 + rand(41)
+        g.save! 
+        g.miscalculate
       end
-      puts "vote: #{vote.inspect}"
     end
     Mbus::Io.shutdown
   end
@@ -75,45 +77,98 @@ namespace :db do
 end
 
 namespace :mbus do
+
+  namespace :config do
   
-  desc "Create the default config environment variable value"
-  task :create_mbus_config => :environment do
-    sio = StringIO.new
-    entries = %w(
-      test_exch,test_queue,produce,test.*
-    ) 
-    max_idx = entries.size - 1
-    entries.each_with_index { | entry, idx | 
-      sio << entry.strip
-      sio << '/' if idx < max_idx
-    }
-    puts ""
-    puts "#{Mbus::Config::DEFAULT_CONFIG_ENV_VAR}=#{sio.string}"
-    puts ""
-  end
+    desc "Create the configuration JSON"
+    task :create => :environment do
+      opts = {}
+      opts[:version] = ENV['v']
+      opts[:default_exchange] = 'soomo'
+      @json_str = Mbus::ConfigBuilder.new(opts).build
+      puts "========== Beginning of Config JSON =========="
+      puts @json_str
+      puts "========== End of Config JSON =========="
+    
+      json_obj = JSON.parse(@json_str)
+      validator = Mbus::ConfigValidator.new(json_obj)
+      @valid = validator.valid?
+      puts "JSON Config validation successful?: #{@valid}"
+      validator.errors.each { | msg | puts "ERROR: #{msg}" }
+      validator.warnings.each { | msg | puts "warning: #{msg}" }
+    end
   
-  desc "Display the mbus config and RABBITMQ_URL values"
-  task :display_mbus_config => :environment do
-    Mbus::Config.initialize  
-    puts "mbus version: #{Mbus::VERSION}"
-    puts "env var name: #{Mbus::Config.config_env_var_name}" 
-    puts "config value: #{Mbus::Config.config_value}"
-    puts "exchanges: #{Mbus::Config.exchanges.inspect}"
-    Mbus::Config.exchanges.each { | exch |
-      puts "exchange: #{exch}"
-      Mbus::Config.exch_entries(exch).each { | entry |
-        puts "  exch|queue|binding: #{entry.raw_value}"
-      }
-    }
-    puts "rabbitmq_url: #{Mbus::Config.rabbitmq_url}"
-    puts ""
+    desc "Create then deploy the configuration JSON, loc="
+    task :deploy => :create do
+      loc = ENV['loc']
+      loc = ENV['MBUS_HOME'] if loc.nil?
+      loc = 'redis://localhost:6379#MBUS_CONFIG' if loc.nil?
+      if @valid 
+        if @json_str && @json_str.size > 0
+          result = Mbus::Config.set_config(loc, @json_str)
+          puts "Mbus::Config.set_config successful?: #{result} location: #{loc}"
+        else
+          puts "error: json_str is empty; didn't save it to Redis"
+        end
+      else
+        puts "error: the json is invalid; didn't save it to Redis"
+      end  
+    end
+  
+    desc "Display the deployed configuration JSON"
+    task :display_deployed => :environment do
+      loc = ENV['loc']
+      loc = ENV['MBUS_HOME'] if loc.nil?
+      loc = 'redis://localhost:6379#MBUS_CONFIG' if loc.nil?
+      if loc.include?('^')
+        tokens = loc.split('^')
+        loc = tokens[0]
+      end
+      tokens = loc.split('#')
+      redis_url, redis_key = tokens[0], tokens[1]
+      begin
+        uri = URI.parse(redis_url) 
+        redis = Redis.new(:host => uri.host,
+                          :port => uri.port,
+                          :password => uri.password)
+        json_str = redis.get(redis_key)
+        
+        puts "========== Beginning of Config JSON at location #{loc} =========="
+        if json_str.nil?
+          puts "nil"
+        else
+          puts json_str
+        end
+        puts "========== End of Config JSON at location #{loc} =========="
+
+        json_obj = JSON.parse(json_str)
+        validator = Mbus::ConfigValidator.new(json_obj)
+        valid = validator.valid?
+        puts "JSON Config validation successful?: #{valid}"
+        validator.errors.each { | msg | puts "ERROR: #{msg}" }
+        validator.warnings.each { | msg | puts "warning: #{msg}" } 
+      rescue Exception => e
+        puts "Exception - #{e.message} #{e.inspect}"
+      end
+    end
+    
+    desc "Setup the exchanges and queues per the centralized config."
+    task :setup => :environment do
+      app = ENV['app'] ||= 'all'
+      ENV['MBUS_APP'] = app 
+      opts = {:verbose => true, :silent => false}
+      Mbus::Io.initialize(app, opts)
+      Mbus::Io.shutdown
+    end
+  
   end
   
   desc "Display the status of the Mbus"
-  task :display_mbus_status => :environment do
-    opts = init_options
-    opts[:action] = 'status'
-    Mbus::Io.initialize(opts, true)
+  task :status => :environment do
+    app = ENV['app'] ||= 'all'
+    ENV['MBUS_APP'] = app
+    opts = {:verbose => true, :silent => false}  
+    Mbus::Io.initialize(app, opts)  
     hash = Mbus::Io.status
     hash.keys.sort.each { | fname | 
       puts "exch/queue #{fname} = #{hash[fname]}"
@@ -123,12 +178,18 @@ namespace :mbus do
   
   desc "Send message(s), e= k= n=" 
   task :send_messages => :environment do
-    ename  = ENV['e'] ||= 'soomo'
-    count  = ENV['n'] ||= '1'
-    key    = ENV['k'] ||= 'rake.message'
+    app    = ENV['app'] ||= 'core' 
+    ename  = ENV['e']   ||= 'logs'
+    count  = ENV['n']   ||= '10'
+    key    = ENV['k']   ||= 'logs.app-core.object-hash.action-logmessage'
     actual = 0
-    opts = init_options
-    Mbus::Io.initialize(opts, true)
+    puts "command-line params:"
+    puts "  sending app (app=): #{app}"
+    puts "  to exchange (e=):   #{ename}"
+    puts "  routing key (k=):   #{key}"
+    puts "  message count (n=): #{count}"
+    
+    Mbus::Io.initialize(app, init_options)
     count.to_i.times do | i |
       actual = actual + 1
       msg  = create_message(actual, body="msg sent to key #{unwild_key(key)}")
@@ -137,57 +198,68 @@ namespace :mbus do
     Mbus::Io.shutdown
   end 
   
-  desc "Read messages; e= q= n= "
-  task :read_messages => :environment do 
-    ename = ENV['e'] ||= 'test_exch' 
-    qname = ENV['q'] ||= 'test_queue'
-    count = ENV['n'] ||= '1'
-    opts = init_options
-    Mbus::Io.initialize(opts, true)
+  desc "Read messages; a= e= q= n= "
+  task :read_messages => :environment do
+    app   = ENV['app'] ||= 'logging-consumer' 
+    ename = ENV['e']   ||= 'logs' 
+    qname = ENV['q']   ||= 'messages'
+    count = ENV['n']   ||= '10'
+    puts "command-line params:"
+    puts "  consumer app (app=): #{app}"
+    puts "  from exchange (e=):  #{ename}"
+    puts "  queue (q=):          #{qname}"  
+    puts "  message count (n=):  #{count}"
+    Mbus::Io.initialize(app, init_options)
     read_loop(ename, qname, count)
     Mbus::Io.shutdown
   end
   
   desc "Send messages to all exchanges and keys, n="
   task :send_messages_to_all => :environment do
-    count  = ENV['n'] ||= '1'
+    app    = ENV['app'] ||= 'all' 
+    count  = ENV['n']   ||= '5'
     actual = 0
-    opts = init_options
-    Mbus::Io.initialize(opts, true)
-    Mbus::Config.exchanges.each { | exch |
-      Mbus::Config.exch_entries(exch).each { | entry |
-        if entry.queue != 'all'
+    Mbus::Io.initialize(app, init_options)
+    Mbus::Config.exchange_entries_for_app(app).each { | entry |
+      exch_name = entry['name']
+      Mbus::Config::queues_for_app(app).each { | queue_entry | 
+        if exch_name = queue_entry['exch']
           count.to_i.times do | i |
             actual = actual + 1
-            body = "Msg #{actual} sent to exch '#{entry.exchange}' key: '#{unwild_key(entry.bind_key)}'"
+            uwk  = unwild_key(queue_entry['key'])
+            body = "Msg #{actual} sent to exch '#{exch_name}' key: '#{uwk}'"
             msg  = create_message(actual, body) 
-            Mbus::Io.send_message(entry.exchange, msg.to_json, unwild_key(entry.bind_key))
-          end
+            Mbus::Io.send_message(exch_name, msg.to_json, uwk)
+          end  
         end
       }
     }
     Mbus::Io.shutdown
   end
   
-  desc "Read messages to all exchanges and keys, n="
+  desc "Read messages from all exchanges and keys, n="
   task :read_messages_from_all => :environment do
-    count  = ENV['n'] ||= '1'
+    app    = ENV['app'] ||= 'all' 
+    count  = ENV['n']   ||= '5'
     actual = 0
-    opts = init_options
-    Mbus::Io.initialize(opts, true)
-    Mbus::Config.exchanges.each { | exch |
-      Mbus::Config.exch_entries(exch).each { | entry |
-        read_loop(entry.exchange, entry.queue, count)
+    Mbus::Io.initialize(app, init_options)
+    Mbus::Config.exchange_entries_for_app(app).each { | entry |
+      exch_name = entry['name']
+      Mbus::Config::queues_for_app(app).each { | queue_entry |
+        if exch_name = queue_entry['exch']
+          read_loop(exch_name, queue_entry['name'], count)
+        end
       }
     }
     Mbus::Io.shutdown
   end 
 
   desc "Delete the given exchange, e="
-  task :delete_exchange => :environment do 
+  task :delete_exchange => :environment do
+    app  = ENV['app'] ||= 'all'
     opts = init_options
     opts[:initialize_exchanges] = false
-    Mbus::Io.initialize(opts, true) 
+    Mbus::Io.initialize(app, opts)
     exch_name = ENV['e']
     if exch_name
       result = Mbus::Io.delete_exchange(exch_name, {})
@@ -199,7 +271,7 @@ namespace :mbus do
   
   desc "Start the SampleConsumerProcess"
   task :sample_process => :environment do
-    # rake mbus:sample_process EXCHANGE=soomo QUEUE=rake SLEEP_TIME=20 DB=none
+    ENV['MBUS_APP'] = ENV['app'] ||= 'logging-consumer'
     Mbus::SampleConsumerProcess.new.process_loop
   end 
   
@@ -207,8 +279,11 @@ end
 
 def init_options
   opts = {}
-  opts[:rabbitmq_url] = ENV['rmq_url'] if ENV['rmq_url'] 
-  opts[:initialize_exchanges] = ENV['init_exch'] if ENV['init_exch']
+  opts[:verbose] = true
+  opts[:silent]  = false
+  opts[:rabbitmq_url] = ENV['rabbitmq_url'] if ENV['rabbitmq_url'] 
+  opts[:start_bunny]  = ENV['start_bunny']  if ENV['start_bunny']
+  opts[:initialize_exchanges] = ENV['init_exchanges'] if ENV['init_exchanges']
   opts
 end
 
