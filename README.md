@@ -229,3 +229,34 @@ If the class exists, then Mbus::BaseConsumerProcess will invoke its' "handle(msg
 pass it the message.  It's up to the Handler class to implement the appropriate logic.  The Handler
 class should not attempt to "ack" the message, however, as the Mbus::BaseConsumerProcess run loop
 does this automatically.
+
+## Rake Tasks
+
+The following rake tasks are available.  The "mbus_db" tasks are simply for ActiveRecord
+callback examples using the sqlite database.
+
+    rake mbus:config:create            # Create the configuration JSON
+    rake mbus:config:deploy            # Create then deploy the configuration JSON, loc=
+    rake mbus:config:display_deployed  # Display the deployed configuration JSON
+    rake mbus:config:setup             # Setup the exchanges and queues per the centralized config.
+    rake mbus:delete_exchange          # Delete the given exchange, e=
+    rake mbus:read_messages            # Read messages; a= e= q= n=
+    rake mbus:read_messages_from_all   # Read messages from all exchanges and keys, n=
+    rake mbus:sample_process           # Start the SampleConsumerProcess
+    rake mbus:send_messages            # Send message(s), e= k= n=
+    rake mbus:send_messages_to_all     # Send messages to all exchanges and keys, n=
+    rake mbus:status                   # Display the status of the Mbus
+    
+    rake mbus_db:create                # Create the database.
+    rake mbus_db:create_grade          # Create a Grade(s), n=
+    rake mbus_db:drop                  # Drop the database.
+    rake mbus_db:migrate               # Migrate the database.
+
+
+Shell script `test_rake_tasks.sh` can be used to run all of the tasks to test them on your system.
+
+## Testing with RSpec
+
+Run `rake spec`.  All 71 tests should pass.  Code coverage report is also generated via the simplecov gem.
+
+
