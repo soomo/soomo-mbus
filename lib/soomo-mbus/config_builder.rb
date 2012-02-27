@@ -5,7 +5,7 @@ module Mbus
   # Internal: This class us used within a rake task to create the JSON
   # value for the centralized MBUS_CONFIG value.
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/26
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/27
   
   class ConfigBuilder
   
@@ -59,7 +59,8 @@ module Mbus
         {:app => 'sle',  :object => 'grade',   :action => 'create'},
         {:app => 'sle',  :object => 'grade',   :action => 'update'}, 
         {:app => 'sle',  :object => 'grade',   :action => 'exception'}, 
-
+        {:app => 'sle',  :object => 'hash',    :action => 'grade_broadcast'}, 
+        
         {:app => 'discussions',  :object => 'discussion', :action => 'create'},
         {:app => 'discussions',  :object => 'discussion', :action => 'comment'},
         {:app => 'discussions',  :object => 'discussion', :action => 'exception'},
@@ -80,7 +81,7 @@ module Mbus
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
         {:name => 'analytics-grade',   :key => '#.object-grade.#'},
-        {:name => 'blackboard-grade',  :key => '#.object-grade.#'},  
+        {:name => 'blackboard-grade',  :key => '#.action-grade_broadcast'},  
         {:name => 'analytics-student', :key => '#.object-student.#'}, 
         {:name => 'sle-student',       :key => '#.object-student.#'}, 
         {:name => 'sle-discussion',    :key => '#.object-discussion.#'},

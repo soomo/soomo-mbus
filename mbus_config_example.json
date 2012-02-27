@@ -1,5 +1,5 @@
 {
-  "version": "2012-02-26 10:17:31 -0500",
+  "version": "2012-02-27 17:18:20 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -26,7 +26,7 @@
     },
     {
       "name": "blackboard-grade",
-      "key": "#.object-grade.#",
+      "key": "#.action-grade_broadcast",
       "exch": "soomo",
       "durable": true,
       "ack": true
@@ -139,6 +139,13 @@
       "routing_key": "soomo.app-sle.object-grade.action-exception"
     },
     {
+      "app": "sle",
+      "object": "hash",
+      "action": "grade_broadcast",
+      "exch": "soomo",
+      "routing_key": "soomo.app-sle.object-hash.action-grade_broadcast"
+    },
+    {
       "app": "discussions",
       "object": "discussion",
       "action": "create",
@@ -221,4 +228,3 @@
     }
   ]
 }
-

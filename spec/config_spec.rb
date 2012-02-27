@@ -72,7 +72,7 @@ describe Mbus::Config do
       entry = Mbus::Config.routing_keys[key]
       # puts "routing key: #{idx} #{key} = #{entry.inspect}"
     }
-    Mbus::Config.routing_keys.size.should == 17
+    Mbus::Config.routing_keys.size.should == 18
     entry = Mbus::Config.routing_keys['core|grade|create'] 
     entry['exch'].downcase.should   == 'soomo'
     entry['app'].downcase.should    == 'core' 
@@ -85,7 +85,14 @@ describe Mbus::Config do
     entry['app'].downcase.should    == 'core' 
     entry['object'].downcase.should == 'hash'
     entry['action'].downcase.should == 'logmessage'
-    entry['routing_key'].downcase.should == 'logs.app-core.object-hash.action-logmessage' 
+    entry['routing_key'].downcase.should == 'logs.app-core.object-hash.action-logmessage'
+    
+    entry = Mbus::Config.routing_keys['sle|hash|grade_broadcast'] 
+    entry['exch'].downcase.should   == 'soomo'
+    entry['app'].downcase.should    == 'sle' 
+    entry['object'].downcase.should == 'hash'
+    entry['action'].downcase.should == 'grade_broadcast'
+    entry['routing_key'].downcase.should == 'soomo.app-sle.object-hash.action-grade_broadcast' 
   end 
 
   it 'should implement method routing_lookup_key' do
