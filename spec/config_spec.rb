@@ -72,7 +72,7 @@ describe Mbus::Config do
       entry = Mbus::Config.routing_keys[key]
       # puts "routing key: #{idx} #{key} = #{entry.inspect}"
     }
-    Mbus::Config.routing_keys.size.should == 18
+    Mbus::Config.routing_keys.size.should == 19
     entry = Mbus::Config.routing_keys['core|grade|create'] 
     entry['exch'].downcase.should   == 'soomo'
     entry['app'].downcase.should    == 'core' 
@@ -207,7 +207,7 @@ describe Mbus::Config do
     names = list.collect { | entry | "#{entry['exch']}|#{entry['name']}" }
     expected = ["logs|messages", "soomo|alerts-exception", "soomo|analytics-grade", 
                 "soomo|analytics-student", "soomo|blackboard-grade", "soomo|sle-discussion", 
-                "soomo|sle-student"]
+                "soomo|sle-student", "soomo|student_responses"]
     names.sort.should == expected
     
     list = Mbus::Config.queues_for_app('core')

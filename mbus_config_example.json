@@ -1,5 +1,6 @@
+========== Beginning of Config JSON ==========
 {
-  "version": "2012-02-27 17:18:20 -0500",
+  "version": "2012-02-28 16:19:43 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -20,6 +21,13 @@
     {
       "name": "analytics-grade",
       "key": "#.object-grade.#",
+      "exch": "soomo",
+      "durable": true,
+      "ack": true
+    },
+    {
+      "name": "student_responses",
+      "key": "#.action-response_broadcast",
       "exch": "soomo",
       "durable": true,
       "ack": true
@@ -146,6 +154,13 @@
       "routing_key": "soomo.app-sle.object-hash.action-grade_broadcast"
     },
     {
+      "app": "sle",
+      "object": "hash",
+      "action": "response_broadcast",
+      "exch": "soomo",
+      "routing_key": "soomo.app-sle.object-hash.action-response_broadcast"
+    },
+    {
       "app": "discussions",
       "object": "discussion",
       "action": "create",
@@ -228,3 +243,5 @@
     }
   ]
 }
+========== End of Config JSON ==========
+JSON Config validation successful?: true

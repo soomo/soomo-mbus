@@ -83,7 +83,7 @@ end
 def test_config_json
   template = <<HEREDOC
 {
-  "version": "2012-02-27 17:18:20 -0500",
+  "version": "2012-02-28 16:19:43 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -104,6 +104,13 @@ def test_config_json
     {
       "name": "analytics-grade",
       "key": "#.object-grade.#",
+      "exch": "soomo",
+      "durable": true,
+      "ack": true
+    },
+    {
+      "name": "student_responses",
+      "key": "#.action-response_broadcast",
       "exch": "soomo",
       "durable": true,
       "ack": true
@@ -228,6 +235,13 @@ def test_config_json
       "action": "grade_broadcast",
       "exch": "soomo",
       "routing_key": "soomo.app-sle.object-hash.action-grade_broadcast"
+    },
+    {
+      "app": "sle",
+      "object": "hash",
+      "action": "response_broadcast",
+      "exch": "soomo",
+      "routing_key": "soomo.app-sle.object-hash.action-response_broadcast"
     },
     {
       "app": "discussions",
