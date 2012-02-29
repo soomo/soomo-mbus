@@ -100,6 +100,8 @@ module Mbus
       defaults = {}
       required_keys = [:name, :queues]
       specifications = [
+        {:app => 'ca', :name => 'student-responses-consumer', :queues => ['student_responses']},
+         
         {:app => 'analytics', :name => 'analytics-consumer', 
          :queues => ['soomo|analytics-grade', 'soomo|analytics-student']},
 

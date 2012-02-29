@@ -83,7 +83,7 @@ end
 def test_config_json
   template = <<HEREDOC
 {
-  "version": "2012-02-28 16:19:43 -0500",
+  "version": "2012-02-29 11:12:25 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -294,6 +294,13 @@ def test_config_json
     }
   ],
   "consumer_processes": [
+    {
+      "app": "ca",
+      "name": "student-responses-consumer",
+      "queues": [
+        "student_responses"
+      ]
+    },
     {
       "app": "analytics",
       "name": "analytics-consumer",
