@@ -4,12 +4,12 @@ module Mbus
   #
   # Internal: 
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/26
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/29
   
   class BaseConsumerProcess
     
     attr_reader :options, :app_name, :continue_to_process, :cycles
-    attr_reader :queues_list, :messages_read, :messages_processed
+    attr_reader :queues_list, :messages_read, :messages_processed, :classname_map
     attr_reader :sleep_count, :max_sleeps
     attr_reader :queue_empty_sleep_time, :db_disconnected_count, :db_disconnect_sleep_time
     
@@ -27,6 +27,7 @@ module Mbus
       @messages_processed       = 0
       @db_disconnected_count    = 0
       @sleep_count              = 0
+      @classname_map            = {}
       @db_disconnect_sleep_time = initialize_db_disconnected_sleep_time
       @queue_empty_sleep_time   = initialize_queue_empty_sleep_time
       @queues_list              = initialize_queues_list
@@ -190,8 +191,21 @@ module Mbus
     
     def handler_classname(msg_hash)
       if msg_hash && msg_hash.class == Hash
-        klass, action = msg_hash['object'], msg_hash['action']
-        "#{klass}#{action.capitalize}MessageHandler"
+        action = msg_hash['action']
+        if action
+          if classname_map.has_key?(action)
+             classname_map[action]
+          else
+             sio = StringIO.new
+             action.tr('-','_').split('_').each { | token | sio << token.capitalize }
+             sio << 'MessageHandler'
+             cname = sio.string
+             classname_map[action] = cname
+             cname
+          end
+        else
+          nil
+        end
       else
         nil
       end 

@@ -23,10 +23,7 @@ class TestProducer
   end  
 end
 
-class HashLogmessageMessageHandler < Mbus::BaseMessageHandler
-end 
-
-class StringLogmessageMessageHandler < Mbus::BaseMessageHandler
+class LogmessageMessageHandler < Mbus::BaseMessageHandler
   def handle(msg)
     @message = msg
     if data.include?('please disconnect from the database')

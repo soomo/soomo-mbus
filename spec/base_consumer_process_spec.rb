@@ -146,10 +146,35 @@ describe Mbus::BaseConsumerProcess do
 
     tp = TestProducer.new
     data = {:group => "Salt-N-Pepa", :song => "Push It"}
+    
     json_str = tp.build_message('core', {}, 'some_action', 'soomo', 'a.b.c', data)
-    json_obj = JSON.parse(json_str) 
+    json_obj = JSON.parse(json_str)
+    process.classname_map.size.should == 0 
     cn = process.handler_classname(json_obj)
-    process.shutdown  
+    cn.should == 'SomeActionMessageHandler'
+    process.classname_map.size.should == 1 
+    process.classname_map['some_action'].should == 'SomeActionMessageHandler'
+
+    json_str = tp.build_message('core', {}, 'awesome_possum', 'soomo', 'x.y.z', data)
+    json_obj = JSON.parse(json_str)
+    cn = process.handler_classname(json_obj)
+    cn.should == 'AwesomePossumMessageHandler'
+    process.classname_map.size.should == 2 
+    process.classname_map['awesome_possum'].should == 'AwesomePossumMessageHandler'
+
+    json_str = tp.build_message('core', {}, 'awesome-possum', 'soomo', 'x.y.z', data)
+    json_obj = JSON.parse(json_str)
+    cn = process.handler_classname(json_obj)
+    cn.should == 'AwesomePossumMessageHandler'
+    process.classname_map.size.should == 3 
+    process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
+      
+    cn = process.handler_classname(json_obj)
+    cn.should == 'AwesomePossumMessageHandler'
+    process.classname_map.size.should == 3 
+    process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
+    
+    process.shutdown 
   end 
   
   it 'should execute its run loop with no database and no sleeps' do
