@@ -5,7 +5,7 @@ require 'spec_helper'
 describe Mbus do
   
   it 'should return the correct version string' do
-    Mbus::VERSION.should == "0.8.2"
+    Mbus::VERSION.should == "0.8.3"
   end
   
 end
