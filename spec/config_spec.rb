@@ -215,7 +215,11 @@ describe Mbus::Config do
 
     list = Mbus::Config.queues_for_app('sle')
     list.size.should == 0
-
+    
+    list = Mbus::Config.queues_for_app('ca-consumer')
+    names = list.collect { | entry | "#{entry['exch']}|#{entry['name']}" }
+    names.sort.should == ["soomo|student_responses"]
+    
     list = Mbus::Config.queues_for_app('sle-consumer')
     names = list.collect { | entry | "#{entry['exch']}|#{entry['name']}" }
     names.sort.should == ["soomo|sle-discussion", "soomo|sle-student"] 
