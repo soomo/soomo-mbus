@@ -219,11 +219,12 @@ seconds.
 ## Message Handlers
 
 For every message received, Mbus::BaseConsumerProcess will examine the message and attempt to
-instantiate the corresponding message-handler class.  It does this by concatinating the "object"
-value in the message, the capitalized "action" value, and the suffix "MessageHandler".  This design
+instantiate the corresponding message-handler class.  It does this by converting the "action"
+value in the message to a classname prefix, then adds the suffix "MessageHandler".  The action
+value will be translated into capitalized words, and the underscores will be removed.  For example,
+action "student_updated" would translate to class "StudentUpdatedMessageHandler".  This design
 thus uses "convention over configuration".  Your hander implementation classes should extend class
-Mbus::BaseMessageHandler, which offers standard methods to access the components of the message.  
-Using the example message shown above, the classname would be "SongLikeMessageHandler".
+Mbus::BaseMessageHandler, which offers standard methods to access the components of the message.
 
 If the class exists, then Mbus::BaseConsumerProcess will invoke its' "handle(msg)" method, and
 pass it the message.  It's up to the Handler class to implement the appropriate logic.  The Handler

@@ -4,18 +4,18 @@ module Mbus
   #
   # Internal: This class, Mbus::ConfigValidator, is ...
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/26
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/01
 
   class ConfigValidator
 
     attr_reader   :json_object
     attr_accessor :errors, :warnings  
-    attr_reader   :exchange_names, :queue_names
+    attr_reader   :exchange_names, :queue_names, :used_queue_names
     attr_reader   :business_function_names, :consumer_process_names
     
     def initialize(json_obj)
       @json_object, @errors, @warnings = json_obj, [], []
-      @exchange_names, @queue_names = {}, {}
+      @exchange_names, @queue_names, @used_queue_names = {}, {}, {}
       @business_function_names, @consumer_process_names = {}, {}
     end
     
@@ -38,6 +38,7 @@ module Mbus
         validate_queues
         validate_business_functions
         validate_consumer_processes
+        report_unused_and_undefined_queues
       end
     end
     
@@ -149,7 +150,7 @@ module Mbus
         list.each_with_index { | entry, idx |
           validate_entry('consumer_process', idx, entry, consumer_process_entry_spec)
           if entry.class == Hash
-            app, name = entry['app'].to_s, entry['name'].to_s 
+            app, name, queues = entry['app'].to_s, entry['name'].to_s, entry['queues']
             full_name = "#{app}|#{name}"
             unless name.include?('consumer')
               errors << "name should contain the literal 'consumer'"
@@ -159,9 +160,27 @@ module Mbus
             else
               consumer_process_names[full_name] = :empty
             end
+            if (queues.nil?) || (queues.class.name != 'Array') || (queues.size < 1)
+              errors << "consumer_process #{full_name} has no queues, or is not an Array"
+            else
+              queues.each { | fname | used_queue_names[fname] = :empty }
+            end
           end 
         } 
       end 
+    end
+    
+    def report_unused_and_undefined_queues
+      queue_names.keys.sort.each { | fname |
+        unless used_queue_names.has_key?(fname)
+          warnings << "unused queue: #{fname}"
+        end  
+      }
+      used_queue_names.keys.sort.each { | fname |
+        unless queue_names.has_key?(fname)
+          warnings << "undefined queue: #{fname}"
+        end  
+      } 
     end
     
     def validate_entry(type, idx, entry, entry_spec)

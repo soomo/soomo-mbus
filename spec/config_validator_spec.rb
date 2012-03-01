@@ -200,11 +200,13 @@ describe Mbus::ConfigValidator do
         "consumer_process at index 1 is missing key name",
         "consumer_process at index 1 is missing key queues",
         "name should contain the literal 'consumer'",
+        "consumer_process | has no queues, or is not an Array",
         "consumer_process at index 2, app is not a valid String",
         "consumer_process at index 2, name is not a valid String",
         "consumer_process at index 2, queues is not a valid Array",
         "name should contain the literal 'consumer'",
-        "duplicate consumer_process app1|queue_consumer at index 4"]) 
+        "consumer_process false|5 has no queues, or is not an Array",
+        "duplicate consumer_process app1|queue_consumer at index 4"])
     end 
 
   end
