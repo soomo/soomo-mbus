@@ -5,7 +5,7 @@ module Mbus
   # Public: This module, Mbus::Producer, is used or mixed-in by classes
   # which need to put messages on the message bus.
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/26
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
     
   module Producer
 

@@ -202,9 +202,9 @@ describe Mbus::BaseConsumerProcess do
     13.times do | i |
       data = {:n => i, :epoch => Time.now.to_i}
       # produce messages for which will be handled in BaseConsumerProcess by
-      # instances of HashLogmessageMessageHandler and StringLogmessageMessageHandler
-      msg  = tp.doit(data, 'logmessage')
-      msg  = tp.doit("String message #{i} at #{Time.now.to_i}", 'logmessage')
+      # instances of class LogMessageMessageHandler
+      msg  = tp.doit(data, 'log_message')
+      msg  = tp.doit("String message #{i} at #{Time.now.to_i}", 'log_message')
     end
     Mbus::Io.shutdown 
     
@@ -254,11 +254,11 @@ describe Mbus::BaseConsumerProcess do
       data = {:n => i, :epoch => Time.now.to_i}
       # produce messages for which will be handled in BaseConsumerProcess by
       # instances of HashLogmessageMessageHandler and StringLogmessageMessageHandler
-      msg  = tp.doit(data, 'logmessage')
+      msg  = tp.doit(data, 'log_message')
       if i == 11
-        msg = tp.doit("This is a test, please disconnect from the database, at #{Time.now.to_i}", 'logmessage')
+        msg = tp.doit("This is a test, please disconnect from the database, at #{Time.now.to_i}", 'log_message')
       else
-        msg = tp.doit("String message #{i} at #{Time.now.to_i}", 'logmessage')
+        msg = tp.doit("String message #{i} at #{Time.now.to_i}", 'log_message')
       end
     end
     Mbus::Io.shutdown 

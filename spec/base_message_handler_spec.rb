@@ -14,16 +14,16 @@ describe Mbus::BaseMessageHandler do
   
   it 'should implement a constructor and handle method' do
     opts = {:a => 'a'}
-    handler = LogmessageMessageHandler.new(opts)
+    handler = LogMessageMessageHandler.new(opts)
     handler.handle(@json_obj) 
     handler.options.should == opts
   end
   
   it 'should execute its inherited methods' do
-    handler = LogmessageMessageHandler.new({})
+    handler = LogMessageMessageHandler.new({})
     handler.handle(@json_obj)
-    handler.classname.should == 'LogmessageMessageHandler'
-    handler.log_prefix.should == 'handler_test LogmessageMessageHandler'
+    handler.classname.should == 'LogMessageMessageHandler'
+    handler.log_prefix.should == 'handler_test LogMessageMessageHandler'
     handler.app.should == 'core'
     handler.source_app.should == 'core'
     handler.object.should == 'Hash'

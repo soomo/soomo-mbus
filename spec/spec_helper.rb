@@ -23,7 +23,7 @@ class TestProducer
   end  
 end
 
-class LogmessageMessageHandler < Mbus::BaseMessageHandler
+class LogMessageMessageHandler < Mbus::BaseMessageHandler
   def handle(msg)
     @message = msg
     if data.include?('please disconnect from the database')
@@ -80,7 +80,7 @@ end
 def test_config_json
   template = <<HEREDOC
 {
-  "version": "2012-02-29 11:40:26 -0500",
+  "version": "2012-03-02 09:06:18 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -151,7 +151,7 @@ def test_config_json
       "exch": "logs",
       "name": "messages",
       "ack": true,
-      "key": "#.action-logmessage",
+      "key": "#.action-log_message",
       "durable": true
     }
   ],
@@ -159,72 +159,72 @@ def test_config_json
     {
       "app": "core",
       "object": "grade",
-      "action": "create",
+      "action": "grade_create",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-grade.action-create"
+      "routing_key": "soomo.app-core.object-grade.action-grade_create"
     },
     {
       "app": "core",
       "object": "grade",
-      "action": "update",
+      "action": "grade_update",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-grade.action-update"
+      "routing_key": "soomo.app-core.object-grade.action-grade_update"
     },
     {
       "app": "core",
       "object": "grade",
-      "action": "exception",
+      "action": "grade_exception",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-grade.action-exception"
+      "routing_key": "soomo.app-core.object-grade.action-grade_exception"
     },
     {
       "app": "core",
       "object": "student",
-      "action": "create",
+      "action": "student_create",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-student.action-create"
+      "routing_key": "soomo.app-core.object-student.action-student_create"
     },
     {
       "app": "core",
       "object": "student",
-      "action": "update",
+      "action": "student_update",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-student.action-update"
+      "routing_key": "soomo.app-core.object-student.action-student_update"
     },
     {
       "app": "core",
       "object": "student",
-      "action": "destroy",
+      "action": "student_destroy",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-student.action-destroy"
+      "routing_key": "soomo.app-core.object-student.action-student_destroy"
     },
     {
       "app": "core",
       "object": "student",
-      "action": "exception",
+      "action": "student_exception",
       "exch": "soomo",
-      "routing_key": "soomo.app-core.object-student.action-exception"
+      "routing_key": "soomo.app-core.object-student.action-student_exception"
     },
     {
       "app": "sle",
       "object": "grade",
-      "action": "create",
+      "action": "grade_create",
       "exch": "soomo",
-      "routing_key": "soomo.app-sle.object-grade.action-create"
+      "routing_key": "soomo.app-sle.object-grade.action-grade_create"
     },
     {
       "app": "sle",
       "object": "grade",
-      "action": "update",
+      "action": "grade_update",
       "exch": "soomo",
-      "routing_key": "soomo.app-sle.object-grade.action-update"
+      "routing_key": "soomo.app-sle.object-grade.action-grade_update"
     },
     {
       "app": "sle",
       "object": "grade",
-      "action": "exception",
+      "action": "grade_exception",
       "exch": "soomo",
-      "routing_key": "soomo.app-sle.object-grade.action-exception"
+      "routing_key": "soomo.app-sle.object-grade.action-grade_exception"
     },
     {
       "app": "sle",
@@ -243,51 +243,51 @@ def test_config_json
     {
       "app": "discussions",
       "object": "discussion",
-      "action": "create",
+      "action": "discussion_create",
       "exch": "soomo",
-      "routing_key": "soomo.app-discussions.object-discussion.action-create"
+      "routing_key": "soomo.app-discussions.object-discussion.action-discussion_create"
     },
     {
       "app": "discussions",
       "object": "discussion",
-      "action": "comment",
+      "action": "discussion_comment",
       "exch": "soomo",
-      "routing_key": "soomo.app-discussions.object-discussion.action-comment"
+      "routing_key": "soomo.app-discussions.object-discussion.action-discussion_comment"
     },
     {
       "app": "discussions",
       "object": "discussion",
-      "action": "exception",
+      "action": "discussion_exception",
       "exch": "soomo",
-      "routing_key": "soomo.app-discussions.object-discussion.action-exception"
+      "routing_key": "soomo.app-discussions.object-discussion.action-discussion_exception"
     },
     {
       "exch": "logs",
       "app": "core",
       "object": "string",
-      "action": "logmessage",
-      "routing_key": "logs.app-core.object-string.action-logmessage"
+      "action": "log_message",
+      "routing_key": "logs.app-core.object-string.action-log_message"
     },
     {
       "exch": "logs",
       "app": "core",
       "object": "hash",
-      "action": "logmessage",
-      "routing_key": "logs.app-core.object-hash.action-logmessage"
+      "action": "log_message",
+      "routing_key": "logs.app-core.object-hash.action-log_message"
     },
     {
       "exch": "logs",
       "app": "sle",
       "object": "string",
-      "action": "logmessage",
-      "routing_key": "logs.app-sle.object-string.action-logmessage"
+      "action": "log_message",
+      "routing_key": "logs.app-sle.object-string.action-log_message"
     },
     {
       "exch": "logs",
       "app": "cac",
       "object": "string",
-      "action": "logmessage",
-      "routing_key": "logs.app-cac.object-string.action-logmessage"
+      "action": "log_message",
+      "routing_key": "logs.app-cac.object-string.action-log_message"
     }
   ],
   "consumer_processes": [

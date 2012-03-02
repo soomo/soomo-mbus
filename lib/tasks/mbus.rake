@@ -111,7 +111,7 @@ namespace :mbus do
     app    = ENV['app'] ||= 'core' 
     ename  = ENV['e']   ||= 'logs'
     count  = ENV['n']   ||= '10'
-    key    = ENV['k']   ||= 'logs.app-core.object-hash.action-logmessage'
+    key    = ENV['k']   ||= 'logs.app-core.object-hash.action-log_message'
     actual = 0
     puts "command-line params:"
     puts "  sending app (app=): #{app}"
@@ -124,7 +124,7 @@ namespace :mbus do
     count.to_i.times do | i |
       actual = actual + 1
       msg  = create_message(actual, body="msg sent to key #{unwild_key(key)}")
-      msg_sent = producer.send(msg, "logmessage")
+      msg_sent = producer.send(msg, "log_message")
     end
     Mbus::Io.shutdown
   end 

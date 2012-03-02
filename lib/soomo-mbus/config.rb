@@ -5,7 +5,7 @@ module Mbus
   # Internal: This class, Mbus::Config, is be used to obtain configuration
   # values used in this gem, such as for rabbitmq.
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/26
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
   class Config
 
@@ -162,7 +162,7 @@ module Mbus
         true
       else
         validator.errors.each { | err | 
-          puts "#{classname}.valid_config_json? error - #{err}" if verbose?
+          puts "#{classname}.valid_config_json? error - #{err}" unless silent?
         }
         false
       end

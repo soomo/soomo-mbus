@@ -5,7 +5,7 @@ module Mbus
   # Internal: This class us used within a rake task to create the JSON
   # value for the centralized MBUS_CONFIG value.
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/02/28
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
   
   class ConfigBuilder
   
@@ -48,28 +48,28 @@ module Mbus
       defaults = {:exch => default_root_routing_key}
       required_keys = [:exch, :app, :object, :action, :routing_key]
       specifications = [
-        {:app => 'core', :object => 'grade',   :action => 'create'}, 
-        {:app => 'core', :object => 'grade',   :action => 'update'}, 
-        {:app => 'core', :object => 'grade',   :action => 'exception'}, 
-        {:app => 'core', :object => 'student', :action => 'create'}, 
-        {:app => 'core', :object => 'student', :action => 'update'},
-        {:app => 'core', :object => 'student', :action => 'destroy'}, 
-        {:app => 'core', :object => 'student', :action => 'exception'},
+        {:app => 'core', :object => 'grade',   :action => 'grade_create'}, 
+        {:app => 'core', :object => 'grade',   :action => 'grade_update'}, 
+        {:app => 'core', :object => 'grade',   :action => 'grade_exception'}, 
+        {:app => 'core', :object => 'student', :action => 'student_create'}, 
+        {:app => 'core', :object => 'student', :action => 'student_update'},
+        {:app => 'core', :object => 'student', :action => 'student_destroy'}, 
+        {:app => 'core', :object => 'student', :action => 'student_exception'},
         
-        {:app => 'sle',  :object => 'grade',   :action => 'create'},
-        {:app => 'sle',  :object => 'grade',   :action => 'update'}, 
-        {:app => 'sle',  :object => 'grade',   :action => 'exception'}, 
+        {:app => 'sle',  :object => 'grade',   :action => 'grade_create'},
+        {:app => 'sle',  :object => 'grade',   :action => 'grade_update'}, 
+        {:app => 'sle',  :object => 'grade',   :action => 'grade_exception'}, 
         {:app => 'sle',  :object => 'hash',    :action => 'grade_broadcast'},
         {:app => 'sle',  :object => 'hash',    :action => 'response_broadcast'}, 
         
-        {:app => 'discussions',  :object => 'discussion', :action => 'create'},
-        {:app => 'discussions',  :object => 'discussion', :action => 'comment'},
-        {:app => 'discussions',  :object => 'discussion', :action => 'exception'},
+        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_create'},
+        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_comment'},
+        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_exception'},
         
-        {:exch => 'logs', :app => 'core', :object => 'string', :action => 'logmessage'},
-        {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'logmessage'}, 
-        {:exch => 'logs', :app => 'sle',  :object => 'string', :action => 'logmessage'}, 
-        {:exch => 'logs', :app => 'cac',  :object => 'string', :action => 'logmessage'} 
+        {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
+        {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'}, 
+        {:exch => 'logs', :app => 'sle',  :object => 'string', :action => 'log_message'}, 
+        {:exch => 'logs', :app => 'cac',  :object => 'string', :action => 'log_message'} 
       ]
       specifications.each { | spec |
         obj = business_function(spec, defaults)
@@ -88,7 +88,7 @@ module Mbus
         {:name => 'sle-student',       :key => '#.object-student.#'}, 
         {:name => 'sle-discussion',    :key => '#.object-discussion.#'},
         {:name => 'alerts-exception',  :key => '#.action-exception'}, 
-        {:exch => 'logs', :name => 'messages', :ack => false, :key => '#.action-logmessage'}
+        {:exch => 'logs', :name => 'messages', :ack => false, :key => '#.action-log_message'}
       ]
       specifications.each { | spec |
         obj = apply_defaults(spec, defaults)

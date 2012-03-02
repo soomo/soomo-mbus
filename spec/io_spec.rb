@@ -174,9 +174,9 @@ describe Mbus::Io do
     msg1 = {:n => 1, :io_spec => true, :epoch => Time.now.to_i}.to_json
     msg2 = {:n => 2, :io_spec => true, :epoch => Time.now.to_i}.to_json 
     msg3 = "3|true|#{Time.now.to_i}".to_json
-    Mbus::Io.send_message('logs', msg1, 'logs.app-core.object-hash.action-logmessage')
-    Mbus::Io.send_message('logs', msg2, 'logs.app-core.object-hash.action-logmessage')
-    Mbus::Io.send_message('logs', msg3, 'logs.app-core.object-string.action-logmessage') 
+    Mbus::Io.send_message('logs', msg1, 'logs.app-core.object-hash.action-log_message')
+    Mbus::Io.send_message('logs', msg2, 'logs.app-core.object-hash.action-log_message')
+    Mbus::Io.send_message('logs', msg3, 'logs.app-core.object-string.action-log_message') 
     Mbus::Io.shutdown 
 
     # Next, read and verify the new messages.

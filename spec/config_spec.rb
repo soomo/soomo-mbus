@@ -73,19 +73,19 @@ describe Mbus::Config do
       # puts "routing key: #{idx} #{key} = #{entry.inspect}"
     }
     Mbus::Config.routing_keys.size.should == 19
-    entry = Mbus::Config.routing_keys['core|grade|create'] 
+    entry = Mbus::Config.routing_keys['core|grade|grade_create'] 
     entry['exch'].downcase.should   == 'soomo'
     entry['app'].downcase.should    == 'core' 
     entry['object'].downcase.should == 'grade'
-    entry['action'].downcase.should == 'create'
-    entry['routing_key'].downcase.should == 'soomo.app-core.object-grade.action-create'
+    entry['action'].downcase.should == 'grade_create'
+    entry['routing_key'].downcase.should == 'soomo.app-core.object-grade.action-grade_create'
     
-    entry = Mbus::Config.routing_keys['core|hash|logmessage'] 
+    entry = Mbus::Config.routing_keys['core|hash|log_message'] 
     entry['exch'].downcase.should   == 'logs'
     entry['app'].downcase.should    == 'core' 
     entry['object'].downcase.should == 'hash'
-    entry['action'].downcase.should == 'logmessage'
-    entry['routing_key'].downcase.should == 'logs.app-core.object-hash.action-logmessage'
+    entry['action'].downcase.should == 'log_message'
+    entry['routing_key'].downcase.should == 'logs.app-core.object-hash.action-log_message'
     
     entry = Mbus::Config.routing_keys['sle|hash|grade_broadcast'] 
     entry['exch'].downcase.should   == 'soomo'
@@ -108,13 +108,13 @@ describe Mbus::Config do
   it 'should implement method lookup_routing_key' do
     Mbus::Config.initialize('core', @opts)
     Mbus::Config.lookup_routing_key({},'camelCase').should be_nil
-    entry = Mbus::Config.lookup_routing_key({},'logmessage') 
+    entry = Mbus::Config.lookup_routing_key({},'log_message') 
     entry['exch'].should == 'logs'
-    entry['routing_key'].should == 'logs.app-core.object-hash.action-logmessage'
+    entry['routing_key'].should == 'logs.app-core.object-hash.action-log_message'
     
-    entry = Mbus::Config.lookup_routing_key('','logmessage')
+    entry = Mbus::Config.lookup_routing_key('','log_message')
     entry['exch'].should == 'logs'
-    entry['routing_key'].should == 'logs.app-core.object-string.action-logmessage'
+    entry['routing_key'].should == 'logs.app-core.object-string.action-log_message'
   end 
   
   it 'should implement method default_exchange_type' do

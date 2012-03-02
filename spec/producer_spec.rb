@@ -39,14 +39,14 @@ describe Mbus::Producer do
   
   it 'should successfully send an auto-formatted message' do
     tp = TestProducer.new
-    json_str = tp.doit({}, 'logmessage')
+    json_str = tp.doit({}, 'log_message')
     json_str.should_not be_nil
     json_obj = JSON.parse(json_str)
     #puts JSON.pretty_generate(json_obj)
     json_obj['app'].should    == 'core'
     json_obj['object'].should == 'Hash'
-    json_obj['action'].should == 'logmessage'
-    json_obj['rkey'].should   == 'logs.app-core.object-hash.action-logmessage'
+    json_obj['action'].should == 'log_message'
+    json_obj['rkey'].should   == 'logs.app-core.object-hash.action-log_message'
     epoch =Time.now.to_i
     json_obj['sent_at'].should > epoch - 2
     json_obj['sent_at'].should < epoch + 2 
@@ -55,15 +55,15 @@ describe Mbus::Producer do
   it 'should successfully send a manually-formatted message' do
     custom_msg = {'location' => 'miami', 'count' => 2}
     tp = TestProducer.new
-    json_str = tp.doit({}, 'logmessage', custom_msg.to_json)  
+    json_str = tp.doit({}, 'log_message', custom_msg.to_json)  
     json_str.should_not be_nil
     json_obj = JSON.parse(json_str)
     #puts JSON.pretty_generate(json_obj)
     json_obj['app'].should    == 'core'
     json_obj['object'].should == 'Hash'
-    json_obj['action'].should == 'logmessage' 
+    json_obj['action'].should == 'log_message' 
     json_obj['data'].include?('miami').should be_true
-    json_obj['rkey'].should   == 'logs.app-core.object-hash.action-logmessage'
+    json_obj['rkey'].should   == 'logs.app-core.object-hash.action-log_message'
     epoch =Time.now.to_i
     json_obj['sent_at'].should > epoch - 2
     json_obj['sent_at'].should < epoch + 2 

@@ -4,7 +4,7 @@ module Mbus
   #
   # Internal: This class, Mbus::ConfigValidator, is ...
   #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/01
+  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
   class ConfigValidator
 
@@ -253,3 +253,7 @@ module Mbus
   end
   
 end
+
+=begin
+
+=end
