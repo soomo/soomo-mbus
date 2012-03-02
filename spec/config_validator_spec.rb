@@ -207,6 +207,29 @@ describe Mbus::ConfigValidator do
         "name should contain the literal 'consumer'",
         "consumer_process false|5 has no queues, or is not an Array",
         "duplicate consumer_process app1|queue_consumer at index 4"])
+    end
+    
+    it 'should produce implement the report method' do
+      json_obj  = JSON.parse(test_config_json)   
+      validator = Mbus::ConfigValidator.new(json_obj)
+      validator.valid?.should be_true
+      report_lines = validator.report(true)
+      report_lines.size.should > 0
+      report_lines.include?('Business Function Traceability Report').should be_true
+      
+      expected1 = "Business Function: sle, response_broadcast -> 'soomo.app-sle.object-hash.action-response_broadcast'"
+      expected2 = "Exchange:  'soomo'  type: topic  persistent: true  mandatory: false  immediate: false"
+      expected3 = "Queue:   'student_responses'  key: #.action-response_broadcast  durable: true  ack: true"
+      expected4 = "Consumer: 'ca-consumer' in app: 'ca'"
+      matched_index = -1
+      report_lines.each_with_index { | line, idx |
+        matched_index = idx if line.strip == expected1
+      }
+      matched_index.should > 0
+      report_lines[matched_index].strip.should == expected1
+      report_lines[matched_index + 1].strip.should == expected2
+      report_lines[matched_index + 2].strip.should == expected3
+      report_lines[matched_index + 3].strip.should == expected4
     end 
 
   end

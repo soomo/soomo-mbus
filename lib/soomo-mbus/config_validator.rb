@@ -25,12 +25,85 @@ module Mbus
       errors.size == 0
     end
 
-    def report
-      report_lines << "Report!"
-      report_lines.each { | line | puts line }
+    def report(silent=false)
+      list = root_array('business_functions')
+      return if list.nil?
+      report_lines << ""
+      report_lines << "Business Function Traceability Report" 
+      list.each { | bf_entry | 
+        report_lines << ""
+        report_lines << "  Business Function: #{business_function_report_line(bf_entry)}"
+        report_lines << "    Exchange:  #{exchange_report_line(bf_entry)}"
+        queues = queues_matching_business_function(bf_entry)
+        queues.each { | q_entry |
+          report_lines << "      Queue:   #{queue_report_line(q_entry)}"
+          processes = consumer_processes_consuming_queue(q_entry)
+          processes.each { | cp_entry |
+            report_lines << "        Consumer: #{consumer_process_report_line(cp_entry)}"
+          }
+        }
+      }
+      report_lines << "" 
+      report_lines.each { | line | puts line unless silent }
+      report_lines
     end 
     
     private
+    
+    def business_function_report_line(bf_entry)
+      app, action, rkey = bf_entry['app'], bf_entry['action'], bf_entry['routing_key']
+      "#{app}, #{action} -> '#{rkey}'"
+    end
+    
+    def exchange_report_line(bf_entry)
+      exch = bf_entry['exch']
+      exch_entry = exchange_names[exch]
+      t, p, m, i = exch_entry['type'], exch_entry['persistent'], exch_entry['mandatory'], exch_entry['immediate']
+      "'#{exch}'  type: #{t}  persistent: #{p}  mandatory: #{m}  immediate: #{i}"
+    end 
+    
+    def consumer_process_report_line(cp_entry)
+      "'#{cp_entry['name']}' in app: '#{cp_entry['app']}'"
+    end
+
+    def queues_matching_business_function(bf_entry)
+      queues, rkey = [], bf_entry['routing_key']
+      root_array('queues').each { | q_entry | 
+        # puts "queues_matching_business_function rkey: #{rkey} qe: #{q_entry}"
+        queues << q_entry if (routing_matches?(rkey, q_entry['key']))
+      }
+      queues
+    end
+    
+    def routing_matches?(rkey, qkey)
+      # TODO, if necessary - implement matching logic based on the * and # wildcard characters.
+      # A '*' can substitute for exactly one word, while a '#' can substitute for zero or more words.
+      # bf rkey example: "soomo.app-sle.object-hash.action-response_broadcast"
+      # q key example:   "#.action-response_broadcast"
+      scrubbed = qkey.tr('.*#','').strip
+      rkey.include?(scrubbed) 
+    end
+    
+    def consumer_processes_consuming_queue(q_entry)
+      processes, qe_fullname = [], "#{q_entry['exch']}|#{q_entry['name']}"
+      root_array('consumer_processes').each { | cp_entry |
+        queues_list = cp_entry['queues']
+        if queues_list
+          queues_list.each { | n |
+            if qe_fullname == n
+              processes << cp_entry
+            end
+          }
+        end 
+      } 
+      processes
+    end
+    
+    def queue_report_line(q_entry)
+      e, n, k = q_entry['exch'], q_entry['name'], q_entry['key']
+      d, a    = q_entry['durable'], q_entry['ack']
+      "'#{n}'  key: #{k}  durable: #{d}  ack: #{a}"
+    end
     
     def errors?
       errors.size > 0
@@ -92,7 +165,7 @@ module Mbus
             if exchange_names.has_key?(name)
               errors << "duplicate exchange name #{name} at index #{idx}"
             else
-              exchange_names[name] = :empty
+              exchange_names[name] = entry
             end
             unless valid_exchange_types.include?(type)
               errors << "invalid exchange type #{type} at index #{idx}"
@@ -117,7 +190,7 @@ module Mbus
             if queue_names.has_key?(full_name)
               errors << "duplicate queue #{full_name} at index #{idx}"
             else
-              queue_names[full_name] = :empty
+              queue_names[full_name] = entry
             end
           end 
         } 
