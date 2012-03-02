@@ -3,7 +3,9 @@ module Mbus
   # :markup: tomdoc
   #
   # Internal: This class, Mbus::Config, is be used to obtain configuration
-  # values used in this gem, such as for rabbitmq.
+  # values used in this gem, such as for rabbitmq.  The configuration is
+  # centrally stored in JSON format, at the Redis location(s) indicated by
+  # the MBUS_HOME environment variable.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 

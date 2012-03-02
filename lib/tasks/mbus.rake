@@ -26,6 +26,7 @@ namespace :mbus do
       puts "JSON Config validation successful?: #{@valid}"
       validator.errors.each { | msg | puts "ERROR: #{msg}" }
       validator.warnings.each { | msg | puts "warning: #{msg}" }
+      validator.report
     end
   
     desc "Create then deploy the configuration JSON, loc="
@@ -76,7 +77,8 @@ namespace :mbus do
         valid = validator.valid?
         puts "JSON Config validation successful?: #{valid}"
         validator.errors.each { | msg | puts "ERROR: #{msg}" }
-        validator.warnings.each { | msg | puts "warning: #{msg}" } 
+        validator.warnings.each { | msg | puts "warning: #{msg}" }
+        validator.report 
       rescue Exception => e
         puts "Exception - #{e.message} #{e.inspect}"
       end

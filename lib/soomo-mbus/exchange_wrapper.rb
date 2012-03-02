@@ -2,7 +2,8 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: 
+  # Internal: This class wrappers both an exchange entry per the JSON
+  # configuration, as well as the corresponding Bunny exchange object.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 

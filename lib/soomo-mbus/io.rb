@@ -2,7 +2,7 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: This class, Mbus::Io, is used to perform Io with rabbitmq. 
+  # Internal: This class, Mbus::Io, is used to perform all IO with RabbitMQ.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 

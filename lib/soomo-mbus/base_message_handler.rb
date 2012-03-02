@@ -2,7 +2,8 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: 
+  # Internal: This class is intended to subclassed by all of your
+  # action-specific MessageHandler classes.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 

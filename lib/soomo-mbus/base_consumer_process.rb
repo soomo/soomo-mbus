@@ -2,8 +2,13 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: 
-  #
+  # Internal: This class is intended to be used "as-is" for any process which
+  # consumes messages from the message bus.  It may also be subclassed.
+  # It provides basic redis (configuration), database, and rabbitmq connectivity.
+  # It also provides a standard run-loop for processing messages; the loop
+  # includes database connection checking, message-handler creation, and 
+  # message ack logic.
+  #  
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
   
   class BaseConsumerProcess

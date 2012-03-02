@@ -2,19 +2,20 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: This class, Mbus::ConfigValidator, is ...
+  # Internal: This class, Mbus::ConfigValidator, is used to validate
+  # and report on the message bus configuration JSON value.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
   class ConfigValidator
 
     attr_reader   :json_object
-    attr_accessor :errors, :warnings  
+    attr_accessor :errors, :warnings, :report_lines
     attr_reader   :exchange_names, :queue_names, :used_queue_names
     attr_reader   :business_function_names, :consumer_process_names
     
     def initialize(json_obj)
-      @json_object, @errors, @warnings = json_obj, [], []
+      @json_object, @errors, @warnings, @report_lines = json_obj, [], [], []
       @exchange_names, @queue_names, @used_queue_names = {}, {}, {}
       @business_function_names, @consumer_process_names = {}, {}
     end
@@ -23,6 +24,11 @@ module Mbus
       validate
       errors.size == 0
     end
+
+    def report
+      report_lines << "Report!"
+      report_lines.each { | line | puts line }
+    end 
     
     private
     
@@ -40,7 +46,7 @@ module Mbus
         validate_consumer_processes
         report_unused_and_undefined_queues
       end
-    end
+    end 
     
     def validate_root_object
       if json_object.nil?
