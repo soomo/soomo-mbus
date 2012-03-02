@@ -256,4 +256,37 @@ end
 
 =begin
 
+ex
+      "name": "soomo",
+      "type": "topic",
+      "persistent": true,
+      "mandatory": false,
+      "immediate": false 
+bf 
+      "app": "core",
+      "object": "grade",
+      "action": "grade_create",
+      "exch": "soomo",
+      "routing_key": "soomo.app-core.object-grade.action-grade_create"
+q
+      "name": "analytics-grade",
+      "key": "#.object-grade.#",
+      "exch": "soomo",
+      "durable": true,
+      "ack": true  
+cp
+      "app": "analytics",
+      "name": "analytics-consumer",
+      "queues": ["soomo|analytics-grade","soomo|analytics-student"]
+      
+
+Business Function -> Routing -> Queue -> Consumer Process
+
+Business Function: core|grade_create -> soomo.app-core.object-grade.action-grade_create
+  -> Exch:   soomo, type: topic   persistent: true, mandatory: false, immediate: false
+  -> Queue:  soomo, analytics-grade  durable: true, ack: true   
+  -> Consumer Process: analytics, analytics-consumer 
+   
+
+      
 =end

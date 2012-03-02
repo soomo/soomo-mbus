@@ -191,9 +191,6 @@ describe Mbus::Config do
     list = Mbus::Config.exchange_entries_for_app('cac')
     validate_exchange_list(list, ["logs"])
     
-    list = Mbus::Config.exchange_entries_for_app('analytics-consumer')
-    validate_exchange_list(list, ["soomo"]) 
-    
     list = Mbus::Config.exchange_entries_for_app('logging-consumer')
     validate_exchange_list(list, ["logs"]) 
   end 
@@ -205,8 +202,7 @@ describe Mbus::Config do
 
     list = Mbus::Config.queues_for_app('all')
     names = list.collect { | entry | "#{entry['exch']}|#{entry['name']}" }
-    expected = ["logs|messages", "soomo|alerts-exception", "soomo|analytics-grade", 
-                "soomo|analytics-student", "soomo|blackboard-grade", "soomo|sle-discussion", 
+    expected = ["logs|messages", "soomo|blackboard-grade", "soomo|sle-discussion", 
                 "soomo|sle-student", "soomo|student_responses"]
     names.sort.should == expected
     

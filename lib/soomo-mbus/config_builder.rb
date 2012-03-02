@@ -68,8 +68,8 @@ module Mbus
         
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'}, 
-        {:exch => 'logs', :app => 'sle',  :object => 'string', :action => 'log_message'}, 
-        {:exch => 'logs', :app => 'cac',  :object => 'string', :action => 'log_message'} 
+        {:exch => 'logs', :app => 'sle',  :object => 'hash',   :action => 'log_message'}, 
+        {:exch => 'logs', :app => 'cac',  :object => 'hash',   :action => 'log_message'} 
       ]
       specifications.each { | spec |
         obj = business_function(spec, defaults)
@@ -81,13 +81,10 @@ module Mbus
       defaults = {:exch => default_exchange, :durable => true, :ack => true}
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
-        {:name => 'analytics-grade',   :key => '#.object-grade.#'}, 
         {:name => 'student_responses', :key => '#.action-response_broadcast'},
         {:name => 'blackboard-grade',  :key => '#.action-grade_broadcast'},  
-        {:name => 'analytics-student', :key => '#.object-student.#'}, 
         {:name => 'sle-student',       :key => '#.object-student.#'}, 
         {:name => 'sle-discussion',    :key => '#.object-discussion.#'},
-        {:name => 'alerts-exception',  :key => '#.action-exception'}, 
         {:exch => 'logs', :name => 'messages', :ack => false, :key => '#.action-log_message'}
       ]
       specifications.each { | spec |
@@ -102,9 +99,6 @@ module Mbus
       specifications = [
         {:app => 'ca', :name => 'ca-consumer', 
          :queues => ['soomo|student_responses']},
-         
-        {:app => 'analytics', :name => 'analytics-consumer', 
-         :queues => ['soomo|analytics-grade', 'soomo|analytics-student']},
 
         {:app => 'sle', :name => 'sle-consumer', 
          :queues => ['soomo|sle-student', 'soomo|sle-discussion']}, 
@@ -112,7 +106,7 @@ module Mbus
         {:app => 'bb-pusher', :name => 'bb-pusher-consumer', 
          :queues => ['soomo|blackboard-grade']},
          
-        {:app => 'logging', :name => 'logging-consumer',
+        {:app => 'core', :name => 'logging-consumer',
          :queues => ['logs|messages']}, 
       ]
       specifications.each { | spec |

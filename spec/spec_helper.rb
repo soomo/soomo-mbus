@@ -80,7 +80,7 @@ end
 def test_config_json
   template = <<HEREDOC
 {
-  "version": "2012-03-02 09:06:18 -0500",
+  "version": "2012-03-02 09:48:51 -0500",
   "exchanges": [
     {
       "name": "soomo",
@@ -99,13 +99,6 @@ def test_config_json
   ],
   "queues": [
     {
-      "name": "analytics-grade",
-      "key": "#.object-grade.#",
-      "exch": "soomo",
-      "durable": true,
-      "ack": true
-    },
-    {
       "name": "student_responses",
       "key": "#.action-response_broadcast",
       "exch": "soomo",
@@ -120,13 +113,6 @@ def test_config_json
       "ack": true
     },
     {
-      "name": "analytics-student",
-      "key": "#.object-student.#",
-      "exch": "soomo",
-      "durable": true,
-      "ack": true
-    },
-    {
       "name": "sle-student",
       "key": "#.object-student.#",
       "exch": "soomo",
@@ -136,13 +122,6 @@ def test_config_json
     {
       "name": "sle-discussion",
       "key": "#.object-discussion.#",
-      "exch": "soomo",
-      "durable": true,
-      "ack": true
-    },
-    {
-      "name": "alerts-exception",
-      "key": "#.action-exception",
       "exch": "soomo",
       "durable": true,
       "ack": true
@@ -278,16 +257,16 @@ def test_config_json
     {
       "exch": "logs",
       "app": "sle",
-      "object": "string",
+      "object": "hash",
       "action": "log_message",
-      "routing_key": "logs.app-sle.object-string.action-log_message"
+      "routing_key": "logs.app-sle.object-hash.action-log_message"
     },
     {
       "exch": "logs",
       "app": "cac",
-      "object": "string",
+      "object": "hash",
       "action": "log_message",
-      "routing_key": "logs.app-cac.object-string.action-log_message"
+      "routing_key": "logs.app-cac.object-hash.action-log_message"
     }
   ],
   "consumer_processes": [
@@ -296,14 +275,6 @@ def test_config_json
       "name": "ca-consumer",
       "queues": [
         "soomo|student_responses"
-      ]
-    },
-    {
-      "app": "analytics",
-      "name": "analytics-consumer",
-      "queues": [
-        "soomo|analytics-grade",
-        "soomo|analytics-student"
       ]
     },
     {
@@ -322,13 +293,13 @@ def test_config_json
       ]
     },
     {
-      "app": "logging",
+      "app": "core",
       "name": "logging-consumer",
       "queues": [
         "logs|messages"
       ]
     }
   ]
-}
+} 
 HEREDOC
 end

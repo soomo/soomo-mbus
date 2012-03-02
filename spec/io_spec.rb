@@ -142,7 +142,7 @@ describe Mbus::Io do
     Mbus::Io.app_name.should == 'all'
     hash = Mbus::Io.status
     hash.should_not be_nil
-    hash.size.should == 8
+    hash.size.should == 5
     hash['logs|messages'].should_not be_nil
     hash.keys.sort.each_with_index { | key, idx |
       val = hash[key]
