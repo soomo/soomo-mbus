@@ -55,6 +55,29 @@ The RABBITMQ_URL environment variable must also be set, such as:
 
     RABBITMQ_URL=amqp://localhost
 
+## Business Function Traceability Report
+
+This report is generated whenever any of the following three rake tasks are executed:
+
+    rake mbus:config:create
+    rake mbus:config:deploy
+    rake mbus:config:display_deployed
+    
+The purpose of the report is to make it easy for you to trace messages for a given business function
+from its origin, through RabbitMQ, and to the eventual consumer(s) of the message.  Reading this
+report is easier than visually scanning, and scrolling, through the configuration JSON.
+
+The following are two example report entries.  The first entry indicates that there are no
+queues or consumers associated with the business function, while the second entry does.
+The indentation is intended to imply heirarchy.
+
+    Business Function: core, grade_create -> 'soomo.app-core.object-grade.action-grade_create'
+      Exchange:  'soomo'  type: topic  persistent: true  mandatory: false  immediate: false
+
+    Business Function: sle, response_broadcast -> 'soomo.app-sle.object-hash.action-response_broadcast'
+      Exchange:  'soomo'  type: topic  persistent: true  mandatory: false  immediate: false
+        Queue:   'student_responses'  key: #.action-response_broadcast  durable: true  ack: true
+          Consumer: 'ca-consumer' in app: 'ca' 
 
 ## Application and Message Bus Startup
                
@@ -245,10 +268,9 @@ callback examples using the sqlite database.
     rake mbus:read_messages_from_all   # Read messages from all exchanges and keys, n=
     rake mbus:sample_process           # Start the SampleConsumerProcess
     rake mbus:send_messages            # Send message(s), e= k= n=
-    rake mbus:send_messages_to_all     # Send messages to all exchanges and keys, n=
     rake mbus:status                   # Display the status of the Mbus
     
-    rake mbus_db:create                # Create the database.
+    rake mbus_db:create                # Create the (example sqlite) database.
     rake mbus_db:create_grade          # Create a Grade(s), n=
     rake mbus_db:drop                  # Drop the database.
     rake mbus_db:migrate               # Migrate the database.
@@ -258,6 +280,6 @@ Shell script `test_rake_tasks.sh` can be used to run all of the tasks to test th
 
 ## Testing with RSpec
 
-Run `rake spec`.  All 71 tests should pass.  Code coverage report is also generated via the simplecov gem.
-
+Run `rake spec`.  All 72 tests should pass.  Code coverage report is also generated via the simplecov gem.
+97.66% of the code is covered by these tests; the uncovered code is Exception handling.
 
