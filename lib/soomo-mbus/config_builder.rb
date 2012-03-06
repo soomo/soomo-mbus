@@ -48,16 +48,11 @@ module Mbus
       defaults = {:exch => default_root_routing_key}
       required_keys = [:exch, :app, :object, :action, :routing_key]
       specifications = [
-        {:app => 'core', :object => 'response', :action => 'response_create'},
-        {:app => 'core', :object => 'response', :action => 'response_update'},
-        {:app => 'core', :object => 'response', :action => 'response_exception'},
+        {:app => 'core', :object => 'hash', :action => 'response_update'},
 
-        {:app => 'sle',  :object => 'response', :action => 'response_create'},
-        {:app => 'sle',  :object => 'response', :action => 'response_update'},
-        {:app => 'sle',  :object => 'response', :action => 'response_exception'},
+        {:app => 'sle',  :object => 'hash', :action => 'response_update'},
 
         {:app => 'discussions',  :object => 'discussion', :action => 'discussion_create'},
-        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_exception'},
 
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
@@ -74,8 +69,8 @@ module Mbus
       defaults = {:exch => default_exchange, :durable => true, :ack => true}
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
-        {:name => 'ca-responses',    :key => '#.object-response.#'},
-        {:name => 'bb-responses',    :key => '#.object-response.#'},
+        {:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
+        {:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
         {:name => 'sle-discussions', :key => '#.object-discussion.#'},
         {:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
       ]
