@@ -41,8 +41,8 @@ The next step is to actually deploy the JSON content to your Redis server(s).  T
 with `rake mbus:config:deploy`; specify a `loc=` value.
 
 Then, set the 'MBUS_HOME' environment variable for each node of your system which will use the
-message bus, either as a producer or consumer of messages.  This value must contain ^-delimited list 
-of the Redis configuration locations.  Each location specifies a Redis URL as well as a Redis Key 
+message bus, either as a producer or consumer of messages.  This value must contain ^-delimited list
+of the Redis configuration locations.  Each location specifies a Redis URL as well as a Redis Key
 where the configuration JSON is located, for example.
 
     redis://host1234:6379/#MBUS_CONFIG^redis://host2345:6379/#MBUS_CONFIG
@@ -62,7 +62,7 @@ This report is generated whenever any of the following three rake tasks are exec
     rake mbus:config:create
     rake mbus:config:deploy
     rake mbus:config:display_deployed
-    
+
 The purpose of the report is to make it easy for you to trace messages for a given business function
 from its origin, through RabbitMQ, and to the eventual consumer(s) of the message.  Reading this
 report is easier than visually scanning, and scrolling, through the configuration JSON.
@@ -77,22 +77,22 @@ The indentation is intended to imply heirarchy.
     Business Function: sle, response_broadcast -> 'soomo.app-sle.object-hash.action-response_broadcast'
       Exchange:  'soomo'  type: topic  persistent: true  mandatory: false  immediate: false
         Queue:   'student_responses'  key: #.action-response_broadcast  durable: true  ack: true
-          Consumer: 'ca-consumer' in app: 'ca' 
+          Consumer: 'ca-consumer' in app: 'ca'
 
 ## Application and Message Bus Startup
-               
+
 The "MBUS_APP" environment variable must be set for each producer or consumer process
 in your system.  This defines its unique name, and correlates it to the pertinent information,
 such as exchanges, queues, and business functions in the configuration JSON.
 
 Invoke `Mbus::Io.initialize('app-name', options)` to start the message bus.  The `app-name`
-value corresponds to the MBUS_APP value.  The second argument, options, is a hash with the 
+value corresponds to the MBUS_APP value.  The second argument, options, is a hash with the
 following optional keys and defaults:
 
      key        default       purpose
     :verbose    false         Used in logging
     :silent     false         Used in logging
-    
+
 A Rails initializer is an appropriate place to invoke `Mbus::Io.initialize`.
 
 ## Centralized JSON Configuration
@@ -123,12 +123,12 @@ mandatory, and immediate properties.
         "mandatory": false,
         "immediate": false
       }
-    ] 
+    ]
 
-Business functions are defined with entries like the following.  The "app" value correlates 
+Business functions are defined with entries like the following.  The "app" value correlates
 to the "MBUS_APP" environment variable value.  The "exch" value correlates to the exchange
-entries defined above.  The "object" value is the name of your business object, such as an 
-ActiveRecord model.  The "action" correlates to a method that is being performed on the 
+entries defined above.  The "object" value is the name of your business object, such as an
+ActiveRecord model.  The "action" correlates to a method that is being performed on the
 business object.  You need to define business function entries for each logical message type
 that you plan to put on the bus; undefined messages will not be sent by the bus.
 
@@ -142,11 +142,11 @@ that you plan to put on the bus; undefined messages will not be sent by the bus.
       },
 
 The routing key values are automatically calculated by class Mbus::ConfigBuilder.  Their
-format is standard and contains the `app-`, `object-`, and `action-` prefixes to disambiguate 
-the names. 
+format is standard and contains the `app-`, `object-`, and `action-` prefixes to disambiguate
+the names.
 
 Queues are defined as follows.  The durable and ack (i.e. - acknowledge) value must be
-boolean values; true or false.  The key value is a RabbitMQ routing key.  A nice feature of AMQP 
+boolean values; true or false.  The key value is a RabbitMQ routing key.  A nice feature of AMQP
 and RabbitMQ is that messages can be sent to multiple queues, depending on the routing
 key of the message and the key definitions for the queues.
 
@@ -157,12 +157,12 @@ key of the message and the key definitions for the queues.
       "exch": "soomo",
       "durable": true,
       "ack": true
-    },  
+    },
 
 The last of the four main entry types is "consumer_processes".  They are defined as shown
-below.  The "name" value corresponds to their MBUS_APP name, and the "queues" value is 
+below.  The "name" value corresponds to their MBUS_APP name, and the "queues" value is
 a list of the one or more queues it reads.  These are concatinated values consisting
-of the exchange name, a vertibar (|), and the queue name. 
+of the exchange name, a vertibar (|), and the queue name.
 
     "consumer_processes": [
       {
@@ -172,28 +172,28 @@ of the exchange name, a vertibar (|), and the queue name.
           "soomo|analytics-grade",
           "soomo|analytics-student"
         ]
-      }, 
+      },
 
 ## Producers
 
 Producer processes don't need to be concerned with exchange, queue, or routing key details.
 They just need to mixin the `Mbus::Producer` module, and invoke `mbus_enqueue` to put a
-business object on the bus.  Class `TestProducer` below is an example. 
+business object on the bus.  Class `TestProducer` below is an example.
 
     class TestProducer
       include Mbus::Producer
       def doit(obj, action, custom_json_msg_string=nil)
         mbus_enqueue(obj, action, custom_json_msg_string)
-      end  
+      end
     end
-    
+
 When `mbus_enqueue` is invoked, the message bus will send the message to the appropriate
-exchanges and routing key per your JSON configuration.  Messages for undefined business 
-functions, however, will not be sent. 
+exchanges and routing key per your JSON configuration.  Messages for undefined business
+functions, however, will not be sent.
 
 ## Messages
 
-Messages put on the bus are in JSON format and look like the following.  The value for "data" 
+Messages put on the bus are in JSON format and look like the following.  The value for "data"
 is you business object in JSON format; either an auto-formatted or custom-formatted value.
 The bus itself adds the other entries in the message, such as "app", "object", and "action".
 
@@ -215,7 +215,7 @@ The bus itself adds the other entries in the message, such as "app", "object", a
 Class Mbus::BaseConsumerProcess can be used "as is" for any and all of your processes
 which read messages from the queues.  You can optionally subclass this class as necessary.
 
-Mbus::BaseConsumerProcess provides standard initialization and run-loop processing. 
+Mbus::BaseConsumerProcess provides standard initialization and run-loop processing.
 In addition to the required MBUS_HOME and MBUS_APP environment variables, several others
 may be used.  These are:
 
@@ -238,7 +238,7 @@ to have its messages acknowledged.
 If a process reads from multiple queues, then they will be read in a round-robin manner.  If one of
 the queues becomes empty, then the logic Mbus::BaseConsumerProcess won't read it again for MBUS_QE_TIME
 seconds.
- 
+
 ## Message Handlers
 
 For every message received, Mbus::BaseConsumerProcess will examine the message and attempt to
@@ -269,7 +269,7 @@ callback examples using the sqlite database.
     rake mbus:sample_process           # Start the SampleConsumerProcess
     rake mbus:send_messages            # Send message(s), e= k= n=
     rake mbus:status                   # Display the status of the Mbus
-    
+
     rake mbus_db:create                # Create the (example sqlite) database.
     rake mbus_db:create_grade          # Create a Grade(s), n=
     rake mbus_db:drop                  # Drop the database.

@@ -4,25 +4,25 @@ require 'spec_helper'
 
 describe Mbus::ConfigValidator do
 
-  describe "the root JSON object" do 
-  
+  describe "the root JSON object" do
+
     it 'should not validate a nil root JSON object' do
       validate_config_object(nil, false, ['the root json_object is nil'])
     end
-  
+
     it 'should not validate an Array root JSON object' do
-      validate_config_object([], false, ['the root json_object is not a Hash']) 
+      validate_config_object([], false, ['the root json_object is not a Hash'])
     end
 
     it 'should not validate an empty Hash root JSON object' do
       validate_config_object({}, false, [
-        "the root json_object is missing key: version", 
-        "the root json_object is missing key: exchanges", 
-        "the root json_object is missing key: queues", 
+        "the root json_object is missing key: version",
+        "the root json_object is missing key: exchanges",
+        "the root json_object is missing key: queues",
         "the root json_object is missing key: business_functions",
         "the root json_object is missing key: consumer_processes"])
     end
-    
+
     it 'should not validate a JSON object with empty collections' do
       json_obj = {}
       json_obj['version'] = ''
@@ -35,56 +35,56 @@ describe Mbus::ConfigValidator do
         "zero exchanges are defined",
         "zero queues are defined",
         "zero business_functions are defined",
-        "zero consumer_processes are defined"]) 
+        "zero consumer_processes are defined"])
     end
 
-    it 'should not validate an invalid version entry' do 
+    it 'should not validate an invalid version entry' do
       json_obj = JSON.parse(test_config_json)
-     
+
       json_obj['version'] = []
-      validate_config_object(json_obj, false, ['the version value is not a String']) 
-    
+      validate_config_object(json_obj, false, ['the version value is not a String'])
+
       json_obj['version'] = '  '
-      validate_config_object(json_obj, false, ['the version value is too short']) 
-    end 
-  
-    it 'should validate the standard test JSON' do 
-      json_obj = JSON.parse(test_config_json)
-      validate_config_object(json_obj, true, []) 
+      validate_config_object(json_obj, false, ['the version value is too short'])
     end
-  
-  end 
+
+    it 'should validate the standard test JSON' do
+      json_obj = JSON.parse(test_config_json)
+      validate_config_object(json_obj, true, [])
+    end
+
+  end
 
   describe "the four root element collections must be Arrays" do
-  
+
     it 'the exchanges should be an Array' do
       json_obj = JSON.parse(test_config_json)
       json_obj['exchanges'] = {}
       validate_config_object(json_obj, false, ['the root exchanges entry is not an Array'])
     end
-  
-    it 'the queues should be an Array' do 
+
+    it 'the queues should be an Array' do
       json_obj = JSON.parse(test_config_json)
-      json_obj['queues'] = {} 
-      validate_config_object(json_obj, false, ['the root queues entry is not an Array']) 
+      json_obj['queues'] = {}
+      validate_config_object(json_obj, false, ['the root queues entry is not an Array'])
     end
-  
-    it 'the business_functions should be an Array' do  
+
+    it 'the business_functions should be an Array' do
       json_obj = JSON.parse(test_config_json)
       json_obj['business_functions'] = {}
       validate_config_object(json_obj, false, ['the root business_functions entry is not an Array'])
-    end 
-  
-    it 'the consumer_processes should be an Array' do 
+    end
+
+    it 'the consumer_processes should be an Array' do
       json_obj = JSON.parse(test_config_json)
-      json_obj['consumer_processes'] = {} 
-      validate_config_object(json_obj, false, ['the root consumer_processes entry is not an Array']) 
-    end 
-  
-  end 
+      json_obj['consumer_processes'] = {}
+      validate_config_object(json_obj, false, ['the root consumer_processes entry is not an Array'])
+    end
+
+  end
 
   describe "the four root element Arrays must contain valid elements" do
-     
+
     it 'should not validate invalid exchange entries' do
       json_obj = JSON.parse(test_config_json)
       exchanges = []
@@ -96,15 +96,15 @@ describe Mbus::ConfigValidator do
       exchanges << {'name' => 'test', 'type' => 'topic',  'persistent' => true,
                     'mandatory' => true, 'immediate' => false}                  # <= valid
       exchanges << {'name' => 'test', 'type' => 'topic',  'persistent' => true,
-                    'mandatory' => true, 'immediate' => false}                  # <= duplicate 
+                    'mandatory' => true, 'immediate' => false}                  # <= duplicate
       exchanges << {'name' => 'fan', 'type' => 'fanout',  'persistent' => true,
-                    'mandatory' => true, 'immediate' => false}                  # <= valid 
+                    'mandatory' => true, 'immediate' => false}                  # <= valid
       exchanges << {'name' => 'dir', 'type' => 'direct',  'persistent' => true,
-                    'mandatory' => true, 'immediate' => false}                  # <= valid 
+                    'mandatory' => true, 'immediate' => false}                  # <= valid
       exchanges << {'name' => 'head', 'type' => 'headers',  'persistent' => true,
-                    'mandatory' => false, 'immediate' => true}                  # <= valid 
-      
-      json_obj['exchanges'] = exchanges 
+                    'mandatory' => false, 'immediate' => true}                  # <= valid
+
+      json_obj['exchanges'] = exchanges
       validate_config_object(json_obj, false, [
         "exchange at index 0 is not a Hash",
         "exchange at index 1 is missing key name",
@@ -124,21 +124,21 @@ describe Mbus::ConfigValidator do
         "exchange at index 3 is missing key immediate",
         "duplicate exchange name  at index 3",
         "invalid exchange type wrong at index 3",
-        "duplicate exchange name test at index 5"]) 
+        "duplicate exchange name test at index 5"])
     end
-    
+
     it 'should not validate invalid queue entries' do
       json_obj = JSON.parse(test_config_json)
       queues = []
       queues << []
       queues << {}
-      queues << {'name' => false, 'exch' => 5, 'key' => 5, 'durable' => 5, 'ack' => 5 } 
-      queues << {'name' => 'test', 'exch' => 'e1', 'key' => 'x.y.z', 
-                 'durable' => true, 'ack' => false} # <= valid 
-      queues << {'name' => 'test', 'exch' => 'e1', 'key' => 'x.y.z', 
-                 'durable' => true, 'ack' => false} # <= duplicate 
+      queues << {'name' => false, 'exch' => 5, 'key' => 5, 'durable' => 5, 'ack' => 5 }
+      queues << {'name' => 'test', 'exch' => 'e1', 'key' => 'x.y.z',
+                 'durable' => true, 'ack' => false} # <= valid
+      queues << {'name' => 'test', 'exch' => 'e1', 'key' => 'x.y.z',
+                 'durable' => true, 'ack' => false} # <= duplicate
 
-      json_obj['queues'] = queues 
+      json_obj['queues'] = queues
       validate_config_object(json_obj, false, [
         "queues at index 0 is not a Hash",
         "queues at index 1 is missing key name",
@@ -151,22 +151,22 @@ describe Mbus::ConfigValidator do
         "queues at index 2, key is not a valid String",
         "queues at index 2, durable is not a valid bool",
         "queues at index 2, ack is not a valid bool",
-        "duplicate queue e1|test at index 4"]) 
-    end 
-    
+        "duplicate queue e1|test at index 4"])
+    end
+
     it 'should not validate invalid business_function entries' do
       json_obj = JSON.parse(test_config_json)
       business_functions = []
       business_functions << []
       business_functions << {}
-      business_functions << {'app' => false, 'object' => 5, 'action' => 5, 
-                             'exch' => 5, 'routing_key' => 5 } 
-      business_functions << {'app' => 'app1', 'object' => 'Student', 'action' => 'created', 
-                             'exch' => 'e1', 'routing_key' => 'a.b.c' } # valid 
-      business_functions << {'app' => 'app1', 'object' => 'Student', 'action' => 'created', 
-                             'exch' => 'e1', 'routing_key' => 'a.b.c' } # duplicate  
-      
-      json_obj['business_functions'] = business_functions 
+      business_functions << {'app' => false, 'object' => 5, 'action' => 5,
+                             'exch' => 5, 'routing_key' => 5 }
+      business_functions << {'app' => 'app1', 'object' => 'Student', 'action' => 'created',
+                             'exch' => 'e1', 'routing_key' => 'a.b.c' } # valid
+      business_functions << {'app' => 'app1', 'object' => 'Student', 'action' => 'created',
+                             'exch' => 'e1', 'routing_key' => 'a.b.c' } # duplicate
+
+      json_obj['business_functions'] = business_functions
       validate_config_object(json_obj, false, [
         "business_function at index 0 is not a Hash",
         "business_function at index 1 is missing key app",
@@ -179,7 +179,7 @@ describe Mbus::ConfigValidator do
         "business_function at index 2, action is not a valid String",
         "business_function at index 2, exch is not a valid String",
         "business_function at index 2, routing_key is not a valid String",
-        "duplicate business_function app1|Student|created at index 4"]) 
+        "duplicate business_function app1|Student|created at index 4"])
     end
 
     it 'should not validate invalid consumer_processes entries' do
@@ -187,13 +187,13 @@ describe Mbus::ConfigValidator do
       consumer_processes = []
       consumer_processes << []
       consumer_processes << {}
-      consumer_processes << {'app' => false, 'name' => 5, 'queues' => 5 } 
-      consumer_processes << {'app' => 'app1', 'name' => 'queue_consumer', 
-                             'queues' => ['q1', 'q2'] } # valid 
-      consumer_processes << {'app' => 'app1', 'name' => 'queue_consumer', 
-                             'queues' => ['q1', 'q2'] } # duplicate 
-                             
-      json_obj['consumer_processes'] = consumer_processes 
+      consumer_processes << {'app' => false, 'name' => 5, 'queues' => 5 }
+      consumer_processes << {'app' => 'app1', 'name' => 'queue_consumer',
+                             'queues' => ['q1', 'q2'] } # valid
+      consumer_processes << {'app' => 'app1', 'name' => 'queue_consumer',
+                             'queues' => ['q1', 'q2'] } # duplicate
+
+      json_obj['consumer_processes'] = consumer_processes
       validate_config_object(json_obj, false, [
         "consumer_process at index 0 is not a Hash",
         "consumer_process at index 1 is missing key app",
@@ -208,15 +208,15 @@ describe Mbus::ConfigValidator do
         "consumer_process false|5 has no queues, or is not an Array",
         "duplicate consumer_process app1|queue_consumer at index 4"])
     end
-    
+
     it 'should produce implement the report method' do
-      json_obj  = JSON.parse(test_config_json)   
+      json_obj  = JSON.parse(test_config_json)
       validator = Mbus::ConfigValidator.new(json_obj)
       validator.valid?.should be_true
       report_lines = validator.report(true)
       report_lines.size.should > 0
       report_lines.include?('Business Function Traceability Report').should be_true
-      
+
       expected1 = "Business Function: sle, response_broadcast -> 'soomo.app-sle.object-hash.action-response_broadcast'"
       expected2 = "Exchange:  'soomo'  type: topic  persistent: true  mandatory: false  immediate: false"
       expected3 = "Queue:   'student_responses'  key: #.action-response_broadcast  durable: true  ack: true"
@@ -230,8 +230,8 @@ describe Mbus::ConfigValidator do
       report_lines[matched_index + 1].strip.should == expected2
       report_lines[matched_index + 2].strip.should == expected3
       report_lines[matched_index + 3].strip.should == expected4
-    end 
+    end
 
   end
-  
+
 end

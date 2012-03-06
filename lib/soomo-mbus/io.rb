@@ -6,10 +6,10 @@ module Mbus
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
-  class Io 
-    
+  class Io
+
     @@options, @@exchanges, @@queues, @@bunny = {}, {}, {}, nil
-    
+
     def self.initialize(app_name=nil, opts={})
       @@options  = opts
       @@app_name = app_name
@@ -23,18 +23,18 @@ module Mbus
       started = (start_bunny?) ? start : false
       puts "#{log_prefix}.initialize - completed, bunny started: #{started}" unless silent?
     end
-    
+
     def self.start
       begin
         if @@bunny
           puts "#{log_prefix}.start; stopping the previous @@bunny" unless silent?
-          @@bunny.stop 
+          @@bunny.stop
         end
       rescue Exception => e1
         puts "#{log_prefix}.start Exception - #{e1.message} #{e1.inspect}" unless silent?
         false
       end
-      
+
       begin
         url = Mbus::Config.rabbitmq_url
         puts "#{log_prefix}.starting - rabbitmq_url: #{url}" unless silent?
@@ -56,15 +56,15 @@ module Mbus
     def self.options
       @@options
     end
-    
+
     def self.exchanges
       @@exchanges
     end
-    
+
     def self.queues
       @@queues
     end
-    
+
     def self.classname
       'Mbus::Io'
     end
@@ -72,29 +72,29 @@ module Mbus
     def self.app_name
       @@app_name
     end
-    
+
     def self.log_prefix
       "#{app_name} #{classname}"
     end
-    
+
     def self.verbose?
       @@options[:verbose] && @@options[:verbose] == true
     end
-    
+
     def self.silent?
-      @@options[:silent] && @@options[:silent] == true 
+      @@options[:silent] && @@options[:silent] == true
     end
-    
-    def self.start_bunny? 
+
+    def self.start_bunny?
       (@@options[:start_bunny].to_s == 'false') ? false : true
-    end 
-    
+    end
+
     def self.shutdown
       puts "#{log_prefix}.shutdown starting..." unless silent?
       @@bunny.stop if @@bunny
       puts "#{log_prefix}.shutdown completed." unless silent?
     end
-    
+
     def self.initialize_exchange(exch_entry)
       begin
         ew = Mbus::ExchangeWrapper.new(exch_entry)
@@ -112,27 +112,27 @@ module Mbus
                 qw.queue = q
                 @@queues[qw.fullname] = qw
                 puts "#{log_prefix}.initialize_exchange - bound '#{qw.fullname}' to '#{qw.key}'" unless silent?
-              end 
+              end
             }
           else
             # producers don't need to define queues
           end
         else
-          puts "#{log_prefix}.initialize_exchange - exchange NOT created '#{ew.name}'" unless silent? 
-        end 
+          puts "#{log_prefix}.initialize_exchange - exchange NOT created '#{ew.name}'" unless silent?
+        end
       rescue Exception => excp
         puts "#{log_prefix}.initialize_exchange Exception - #{excp.message} #{excp.inspect}" unless silent?
-      end 
+      end
     end
-    
+
     def self.fullname(exch_name, queue_name)
       "#{exch_name}|#{queue_name}"
     end
-    
+
     def self.delete_exchange(exch_name, opts={})
       ew = @@exchanges[exch_name]
       (ew.nil?) ? nil : ew.exchange.delete(opts)
-    end 
+    end
 
     def self.send_message(exch_name, json_str_msg, routing_key)
       result = nil
@@ -141,7 +141,7 @@ module Mbus
         if ew && json_str_msg && routing_key
           ew.exchange.publish(json_str_msg,
             {:key        => routing_key,
-             :persistent => ew.persistent?, 
+             :persistent => ew.persistent?,
              :mandatory  => ew.mandatory?,
              :immediate  => ew.immediate?})
           puts "#{log_prefix}.send_message exch: '#{ew.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
@@ -151,7 +151,7 @@ module Mbus
         end
       rescue Exception => excp
         puts "#{log_prefix}.send_message Exception - #{excp.message} #{excp.inspect}"
-      end 
+      end
       result
     end
 
@@ -161,13 +161,13 @@ module Mbus
         @@queues.keys.sort.each { | fullname |
           qw = @@queues[fullname]
           hash[fullname] = qw.queue.status if qw
-        }  
+        }
       rescue Exception => excp
         puts "#{log_prefix}.status Exception - #{excp.message} #{excp.inspect}"
       end
       hash
     end
-    
+
     def self.ack_queue(exch_name, queue_name)
       begin
         qw = @@queues[fullname(exch_name, queue_name)]
@@ -177,7 +177,7 @@ module Mbus
       rescue Exception => excp
         puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
       end
-    end 
+    end
 
     def self.read_message(exch_name, queue_name)
       begin
@@ -188,7 +188,7 @@ module Mbus
       end
       nil
     end
-    
+
   end
-  
-end 
+
+end

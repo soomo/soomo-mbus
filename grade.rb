@@ -26,7 +26,7 @@ class Grade < ActiveRecord::Base
       1 / 0
     rescue Exception => e
       mbus_enqueue(self, 'exception')
-    end  
+    end
   end
-end 
-  
+end
+

@@ -18,16 +18,16 @@ describe Mbus::QueueWrapper do
     qw.is_exchange?('wrong').should be_false
     qw.is_exchange?('e1').should be_true
   end
-  
+
   it 'should implement the next_read_time! and should_read? methods' do
     entry = {'exch' => 'e1', 'name' => 'q1', 'key' => '#.x.#', 'durable' => true, 'ack' => false}
-    qw = Mbus::QueueWrapper.new(entry) 
+    qw = Mbus::QueueWrapper.new(entry)
     qw.next_read_time.should == 0
     qw.should_read?.should be_true
     qw.next_read_time!(1)
     qw.should_read?.should be_false
     sleep 1
     qw.should_read?.should be_true
-  end 
-  
+  end
+
 end

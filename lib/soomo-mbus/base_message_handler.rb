@@ -1,4 +1,4 @@
-module Mbus 
+module Mbus
 
   # :markup: tomdoc
   #
@@ -8,9 +8,9 @@ module Mbus
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
   class BaseMessageHandler
-  
+
     attr_reader :message, :options
-    
+
     def initialize(opts={})
       @options = opts ||= {}
     end
@@ -24,15 +24,15 @@ module Mbus
     def classname
       self.class.name
     end
-    
+
     def log_prefix
       "#{Mbus::Io.app_name} #{classname}"
-    end 
+    end
 
     def app
       message['app']
-    end 
-    
+    end
+
     def source_app
       app
     end
@@ -40,7 +40,7 @@ module Mbus
     def object
       message['object']
     end
-    
+
     def action
       message['action']
     end
@@ -48,31 +48,31 @@ module Mbus
     def exch
       message['exch']
     end
-    
+
     def rkey
       message['rkey']
-    end  
+    end
 
     def routing_key
       rkey
     end
-    
+
     def sent_at
       message['sent_at']
     end
 
     def data
-      message['data'] 
+      message['data']
     end
-    
+
     def verbose?
-      @options[:verbose] && @options[:verbose] == true 
+      @options[:verbose] && @options[:verbose] == true
     end
-    
+
     def silent?
-      @options[:silent] && @options[:silent] == true 
+      @options[:silent] && @options[:silent] == true
     end
 
   end
-  
+
 end

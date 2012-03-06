@@ -1,12 +1,12 @@
 require 'simplecov'
-SimpleCov.start 
+SimpleCov.start
 
 require 'rspec'
 require 'active_record'
 require 'bunny'
 require 'json'
 require 'redis'
-require 'uri' 
+require 'uri'
 require 'soomo-mbus'
 
 # Note - In these specs, Redis is assumed to be running at URL 'redis://localhost:6379'.
@@ -20,7 +20,7 @@ class TestProducer
   include Mbus::Producer
   def doit(obj, action, custom_json_msg_string=nil)
     mbus_enqueue(obj, action, custom_json_msg_string)
-  end  
+  end
 end
 
 class LogMessageMessageHandler < Mbus::BaseMessageHandler
@@ -30,7 +30,7 @@ class LogMessageMessageHandler < Mbus::BaseMessageHandler
       ActiveRecord::Base.connection.disconnect!
     end
   end
-end 
+end
 
 def default_config_env_var
   Mbus::Config::DEFAULT_CONFIG_ENV_VAR
@@ -46,7 +46,7 @@ end
 
 def config_location_local_rspec
   'redis://localhost:6379/#MBUS_CONFIG_RSPEC'
-end 
+end
 
 def config_location_local_not_there
   'redis://localhost:6379/#MBUS_CONFIG_NOT_THERE'
@@ -55,7 +55,7 @@ end
 def set_local_redis_config
   result = Mbus::Config.set_config(config_location_local_rspec, test_config_json)
   result.should be_true
-end 
+end
 
 def validate_exchange_list(hashes_list, expected_exch_names)
   hashes_list.size.should == expected_exch_names.size
@@ -300,6 +300,6 @@ def test_config_json
       ]
     }
   ]
-} 
+}
 HEREDOC
 end
