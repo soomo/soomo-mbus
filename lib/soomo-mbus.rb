@@ -1,3 +1,6 @@
+require 'bunny'
+require 'redis'
+require 'json'
 
 require 'soomo-mbus/base_consumer_process'
 require 'soomo-mbus/base_message_handler'
