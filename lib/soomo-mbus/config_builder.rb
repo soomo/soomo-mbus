@@ -48,22 +48,15 @@ module Mbus
       defaults = {:exch => default_root_routing_key}
       required_keys = [:exch, :app, :object, :action, :routing_key]
       specifications = [
-        {:app => 'core', :object => 'grade',   :action => 'grade_create'},
-        {:app => 'core', :object => 'grade',   :action => 'grade_update'},
-        {:app => 'core', :object => 'grade',   :action => 'grade_exception'},
-        {:app => 'core', :object => 'student', :action => 'student_create'},
-        {:app => 'core', :object => 'student', :action => 'student_update'},
-        {:app => 'core', :object => 'student', :action => 'student_destroy'},
-        {:app => 'core', :object => 'student', :action => 'student_exception'},
+        {:app => 'core', :object => 'response', :action => 'response_create'},
+        {:app => 'core', :object => 'response', :action => 'response_update'},
+        {:app => 'core', :object => 'response', :action => 'response_exception'},
 
-        {:app => 'sle',  :object => 'grade',   :action => 'grade_create'},
-        {:app => 'sle',  :object => 'grade',   :action => 'grade_update'},
-        {:app => 'sle',  :object => 'grade',   :action => 'grade_exception'},
-        {:app => 'sle',  :object => 'hash',    :action => 'grade_broadcast'},
-        {:app => 'sle',  :object => 'hash',    :action => 'response_broadcast'},
+        {:app => 'sle',  :object => 'response', :action => 'response_create'},
+        {:app => 'sle',  :object => 'response', :action => 'response_update'},
+        {:app => 'sle',  :object => 'response', :action => 'response_exception'},
 
         {:app => 'discussions',  :object => 'discussion', :action => 'discussion_create'},
-        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_comment'},
         {:app => 'discussions',  :object => 'discussion', :action => 'discussion_exception'},
 
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
@@ -81,11 +74,10 @@ module Mbus
       defaults = {:exch => default_exchange, :durable => true, :ack => true}
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
-        {:name => 'student_responses', :key => '#.action-response_broadcast'},
-        {:name => 'blackboard-grade',  :key => '#.action-grade_broadcast'},
-        {:name => 'sle-student',       :key => '#.object-student.#'},
-        {:name => 'sle-discussion',    :key => '#.object-discussion.#'},
-        {:exch => 'logs', :name => 'messages', :ack => false, :key => '#.action-log_message'}
+        {:name => 'ca-responses',    :key => '#.object-response.#'},
+        {:name => 'bb-responses',    :key => '#.object-response.#'},
+        {:name => 'sle-discussions', :key => '#.object-discussion.#'},
+        {:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
       ]
       specifications.each { | spec |
         obj = apply_defaults(spec, defaults)
@@ -98,16 +90,16 @@ module Mbus
       required_keys = [:name, :queues]
       specifications = [
         {:app => 'ca', :name => 'ca-consumer',
-         :queues => ['soomo|student_responses']},
+         :queues => ['soomo|ca-responses']},
 
         {:app => 'sle', :name => 'sle-consumer',
-         :queues => ['soomo|sle-student', 'soomo|sle-discussion']},
+         :queues => ['soomo|sle-discussions']},
 
         {:app => 'bb-pusher', :name => 'bb-pusher-consumer',
-         :queues => ['soomo|blackboard-grade']},
+         :queues => ['soomo|bb-responses']},
 
         {:app => 'core', :name => 'logging-consumer',
-         :queues => ['logs|messages']},
+         :queues => ['logs|status-messages']},
       ]
       specifications.each { | spec |
         obj = apply_defaults(spec, defaults)
