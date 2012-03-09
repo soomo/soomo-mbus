@@ -33,7 +33,7 @@ namespace :mbus do
     task :deploy => :create do
       loc = ENV['loc']
       loc = ENV['MBUS_HOME'] if loc.nil?
-      loc = 'redis://localhost:6379#MBUS_CONFIG' if loc.nil?
+      loc = 'redis://localhost:6379/#MBUS_CONFIG' if loc.nil?
       if @valid
         if @json_str && @json_str.size > 0
           result = Mbus::Config.set_config(loc, @json_str)
@@ -50,7 +50,7 @@ namespace :mbus do
     task :display_deployed => :environment do
       loc = ENV['loc']
       loc = ENV['MBUS_HOME'] if loc.nil?
-      loc = 'redis://localhost:6379#MBUS_CONFIG' if loc.nil?
+      loc = 'redis://localhost:6379/#MBUS_CONFIG' if loc.nil?
       if loc.include?('^')
         tokens = loc.split('^')
         loc = tokens[0]
