@@ -49,6 +49,7 @@ module Mbus
       required_keys = [:exch, :app, :object, :action, :routing_key]
       specifications = [
         {:app => 'core', :object => 'hash', :action => 'response_update'},
+        {:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 
         {:app => 'sle',  :object => 'hash', :action => 'response_update'},
 
@@ -70,8 +71,13 @@ module Mbus
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
         {:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
+        {:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
+
         {:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
+
         {:name => 'sle-discussions', :key => '#.object-discussion.#'},
+        {:name => 'sle-enrollments', :key => '#.object-hash.action-enrollment_update.#'},
+
         {:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
       ]
       specifications.each { | spec |
@@ -85,10 +91,16 @@ module Mbus
       required_keys = [:name, :queues]
       specifications = [
         {:app => 'ca', :name => 'ca-consumer',
-         :queues => ['soomo|ca-responses']},
+         :queues => [
+          'soomo|ca-responses',
+          'soomo|ca-enrollments'
+        ]},
 
         {:app => 'sle', :name => 'sle-consumer',
-         :queues => ['soomo|sle-discussions']},
+         :queues => [
+          'soomo|sle-discussions',
+          'soomo|sle-enrollments'
+        ]},
 
         {:app => 'bb-pusher', :name => 'bb-pusher-consumer',
          :queues => ['soomo|bb-responses']},
