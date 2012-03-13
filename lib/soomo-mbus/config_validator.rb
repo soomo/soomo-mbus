@@ -69,7 +69,6 @@ module Mbus
     def queues_matching_business_function(bf_entry)
       queues, rkey = [], bf_entry['routing_key']
       root_array('queues').each { | q_entry |
-        # puts "queues_matching_business_function rkey: #{rkey} qe: #{q_entry}"
         queues << q_entry if (routing_matches?(rkey, q_entry['key']))
       }
       queues
@@ -80,8 +79,9 @@ module Mbus
       # A '*' can substitute for exactly one word, while a '#' can substitute for zero or more words.
       # bf rkey example: "soomo.app-sle.object-hash.action-response_broadcast"
       # q key example:   "#.action-response_broadcast"
-      scrubbed = qkey.tr('.*#','').strip
-      rkey.include?(scrubbed)
+      scrubbed_rkey = rkey.tr('.*#','').strip
+      scrubbed_qkey = qkey.tr('.*#','').strip
+      scrubbed_rkey.include?(scrubbed_qkey)
     end
 
     def consumer_processes_consuming_queue(q_entry)
