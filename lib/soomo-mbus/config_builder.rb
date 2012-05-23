@@ -2,7 +2,7 @@ module Mbus
 
   # :markup: tomdoc
   #
-  # Internal: This class us used within a rake task to create the JSON
+  # Internal: This class is used within a rake task to create the JSON
   # value for the centralized MBUS_CONFIG value.
   #
   # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
@@ -53,7 +53,8 @@ module Mbus
 
         {:app => 'sle',  :object => 'hash', :action => 'response_update'},
 
-        {:app => 'discussions',  :object => 'discussion', :action => 'discussion_create'},
+        {:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
+        {:app => 'discussions',  :object => 'hash', :action => 'discussion_comment_create'},
 
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
@@ -75,7 +76,8 @@ module Mbus
 
         {:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
 
-        {:name => 'sle-discussions', :key => '#.object-discussion.#'},
+        {:name => 'sle-discussion_posts', :key => '#.object-hash.action-discussion_post_create.#'},
+        {:name => 'sle-discussion_comments', :key => '#.object-hash.action-discussion_comment_create.#'},
         {:name => 'sle-enrollments', :key => '#.object-hash.action-enrollment_update.#'},
 
         {:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
@@ -98,7 +100,8 @@ module Mbus
 
         {:app => 'sle', :name => 'sle-consumer',
          :queues => [
-          'soomo|sle-discussions',
+          'soomo|sle-discussion_posts',
+          'soomo|sle-discussion_comments',
           'soomo|sle-enrollments'
         ]},
 
