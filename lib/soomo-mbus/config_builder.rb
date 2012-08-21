@@ -56,6 +56,9 @@ module Mbus
         {:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
         {:app => 'discussions',  :object => 'hash', :action => 'discussion_comment_create'},
 
+        {:app => 'course_analytics', :object => 'hash', :action => 'course_create'},
+        {:app => 'course_analytics', :object => 'hash', :action => 'section_create'},
+
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
         {:exch => 'logs', :app => 'sle',  :object => 'hash',   :action => 'log_message'},
@@ -71,6 +74,9 @@ module Mbus
       defaults = {:exch => default_exchange, :durable => true, :ack => true}
       required_keys = [:exch, :name, :durable, :ack, :key]
       specifications = [
+        {:name => 'core-ca_course_create', :key => '#.object-hash.action-course_create.#'},
+        {:name => 'core-ca_section_create', :key => '#.object-hash.action-section_create.#'},
+
         {:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
         {:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
 
@@ -108,8 +114,12 @@ module Mbus
         {:app => 'bb-pusher', :name => 'bb-pusher-consumer',
          :queues => ['soomo|bb-responses']},
 
-        {:app => 'core', :name => 'logging-consumer',
-         :queues => ['logs|status-messages']},
+        {:app => 'core', :name => 'core-consumer',
+         :queues => [
+          'logs|status-messages',
+          'soomo|core-ca_course_create',
+          'soomo|core-ca_section_create'
+        ]},
       ]
       specifications.each { | spec |
         obj = apply_defaults(spec, defaults)
