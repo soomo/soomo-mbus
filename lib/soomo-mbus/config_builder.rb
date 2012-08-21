@@ -56,8 +56,8 @@ module Mbus
         {:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
         {:app => 'discussions',  :object => 'hash', :action => 'discussion_comment_create'},
 
-        {:app => 'course_analytics', :object => 'hash', :action => 'course_create'},
-        {:app => 'course_analytics', :object => 'hash', :action => 'section_create'},
+        {:app => 'ca', :object => 'hash', :action => 'course_create'},
+        {:app => 'ca', :object => 'hash', :action => 'section_create'},
 
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
