@@ -7,3 +7,4 @@ pkg/
 txt_merged.txt
 .bundle/
 vendor/bundle
+.rbenv-version

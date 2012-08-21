@@ -24,7 +24,7 @@ module Mbus
           Mbus::Io.send_message(exch, json_str, rkey)
         end
       rescue Exception => e
-        puts "Mbus::Producer.mbus_enqueue Exception on #{obj.class.name} #{action} e: #{e.inspect}" unless Mbus::Io.silent?
+        puts "Mbus::Producer.mbus_enqueue Exception on #{obj.class.name} #{action} e: #{e.inspect}\n#{e.backtrace}" unless Mbus::Io.silent?
         nil
       end
     end
