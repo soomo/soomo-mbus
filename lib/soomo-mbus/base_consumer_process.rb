@@ -190,7 +190,7 @@ module Mbus
         handler.handle(msg_hash)
         @messages_processed = messages_processed + 1
       rescue Exception => e
-        puts "#{log_prefix}.process_message Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}" unless silent?
+        puts "#{log_prefix}.process_message Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}" unless silent?
       end
     end
 
