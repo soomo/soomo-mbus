@@ -51,6 +51,8 @@ module Mbus
         {:app => 'core', :object => 'hash', :action => 'response_update'},
         {:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 
+        {:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
+
         {:app => 'sle',  :object => 'hash', :action => 'response_update'},
 
         {:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
@@ -58,6 +60,10 @@ module Mbus
 
         {:app => 'ca', :object => 'hash', :action => 'course_create'},
         {:app => 'ca', :object => 'hash', :action => 'section_create'},
+
+        {:app => 'ca-consumer', :object => 'hash', :action => 'audit_document_response'},
+
+        {:app => 'auditor', :object => 'hash', :action => 'audit_document_request'},
 
         {:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
         {:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
@@ -76,15 +82,20 @@ module Mbus
       specifications = [
         {:name => 'core-ca_course_create', :key => '#.object-hash.action-course_create.#'},
         {:name => 'core-ca_section_create', :key => '#.object-hash.action-section_create.#'},
+        {:name => 'core-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 
         {:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
         {:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
+        {:name => 'ca-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 
         {:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
 
         {:name => 'sle-discussion_posts', :key => '#.object-hash.action-discussion_post_create.#'},
         {:name => 'sle-discussion_comments', :key => '#.object-hash.action-discussion_comment_create.#'},
         {:name => 'sle-enrollments', :key => '#.object-hash.action-enrollment_update.#'},
+        {:name => 'sle-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
+
+        {:name => 'auditor-audit_document_responses', :key => '#.object-hash.action-audit_document_response.#'},
 
         {:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
       ]
@@ -101,14 +112,16 @@ module Mbus
         {:app => 'ca', :name => 'ca-consumer',
          :queues => [
           'soomo|ca-responses',
-          'soomo|ca-enrollments'
+          'soomo|ca-enrollments',
+          'soomo|ca-audit_document_requests'
         ]},
 
         {:app => 'sle', :name => 'sle-consumer',
          :queues => [
           'soomo|sle-discussion_posts',
           'soomo|sle-discussion_comments',
-          'soomo|sle-enrollments'
+          'soomo|sle-enrollments',
+          'soomo|sle-audit_document_requests'
         ]},
 
         {:app => 'bb-pusher', :name => 'bb-pusher-consumer',
@@ -118,8 +131,12 @@ module Mbus
          :queues => [
           'logs|status-messages',
           'soomo|core-ca_course_create',
-          'soomo|core-ca_section_create'
+          'soomo|core-ca_section_create',
+          'soomo|core-audit_document_requests'
         ]},
+
+        {:app => 'auditor', :name => 'auditor-consumer',
+         :queues => ['soomo|auditor-audit_document_responses']},
       ]
       specifications.each { | spec |
         obj = apply_defaults(spec, defaults)
