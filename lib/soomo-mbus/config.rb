@@ -134,7 +134,7 @@ module Mbus
 
     def self.rabbitmq_url
       return @@options[:rabbitmq_url] if @@options[:rabbitmq_url]
-      ENV['RABBITMQ_URL'] ||= 'amqp://localhost'
+      ENV['RABBITMQ_URL'] || ENV['RABBITMQ_BIGWIG_URL'] || 'amqp://localhost'
     end
 
     def self.is_consumer?(app_name)
