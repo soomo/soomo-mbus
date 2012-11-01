@@ -162,25 +162,17 @@ module Mbus
 		end
 
 		def handler_classname(msg_hash)
-			if msg_hash && msg_hash.class == Hash
-				action = msg_hash['action']
-				if action
-					if classname_map.has_key?(action)
-						 classname_map[action]
-					else
-						 sio = StringIO.new
-						 action.tr('-','_').split('_').each { | token | sio << token.capitalize }
-						 sio << 'MessageHandler'
-						 cname = sio.string
-						 classname_map[action] = cname
-						 cname
-					end
-				else
-					nil
-				end
+			if msg_hash && msg_hash.kind_of?(Hash) && (action = msg_hash['action'])
+				classname_map[action] ||= classname_from_action(action)
 			else
 				nil
 			end
+		end
+
+		def classname_from_action(action)
+			result = action.tr('-','_').split('_').map {|token| token.capitalize }.join
+			result << "MessageHandler"
+			result
 		end
 
 		def classname
