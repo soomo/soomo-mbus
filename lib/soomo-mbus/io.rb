@@ -53,6 +53,8 @@ module Mbus
 			end
 		end
 
+		def self.reconnect; start; end
+
 		def self.options
 			@@options
 		end
@@ -180,13 +182,29 @@ module Mbus
 		end
 
 		def self.read_message(exch_name, queue_name)
+			retries = 0
 			begin
 				qw = @@queues[fullname(exch_name, queue_name)]
 				return qw.queue.pop(:ack => qw.ack?, :nowait => qw.nowait?)[:payload] if qw
-			rescue Exception => excp
-				puts "#{log_prefix}.read_message Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
+			rescue Bunny::ConnectionError => e
+				puts exception_message('read_message', e, exch_name, queue_name)
+				retries += 1
+				if retries <= 3
+					puts "Reconnecting (attempt: #{retries})"
+					reconnect
+					retry
+				else
+					raise
+				end
+			rescue Exception => e
+				puts exception_message('read_message', e, exch_name, queue_name)
 			end
 			nil
+		end
+
+		def self.exception_message(method, exception, exchange_name='N/A', queue_name='N/A')
+			"#{log_prefix}.#{method} Exception on exch: #{exchange_name} queue: #{queue_name}" +
+			" - #{exception.message}\n#{exception.inspect}"
 		end
 
 	end

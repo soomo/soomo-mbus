@@ -216,4 +216,56 @@ describe Mbus::Io do
 		messages.size.should == 0
 	end
 
+	it "should handle a disconnect when reading from a queue" do
+		# Flush message bus.
+		ENV['MBUS_APP'] = 'logging-consumer'
+		Mbus::Io.initialize('logging-consumer', @opts)
+		continue_to_process = true
+		while continue_to_process
+			msg = Mbus::Io.read_message('logs', 'messages')
+			if (msg == :queue_empty) || msg.nil?
+				continue_to_process = false
+			else
+				Mbus::Io.ack_queue('logs', 'messages')
+			end
+		end
+		Mbus::Io.shutdown
+
+		# Next, send some new log messages
+		ENV['MBUS_APP'] = 'core'
+		Mbus::Io.initialize('core', @opts)
+		Mbus::Io.app_name.should == 'core'
+		msg1 = {:n => 1, :io_spec => true, :epoch => Time.now.to_i}.to_json
+		msg2 = {:n => 2, :io_spec => true, :epoch => Time.now.to_i}.to_json
+		msg3 = "3|true|#{Time.now.to_i}".to_json
+		Mbus::Io.send_message('logs', msg1, 'logs.app-core.object-hash.action-log_message')
+		Mbus::Io.send_message('logs', msg2, 'logs.app-core.object-hash.action-log_message')
+		Mbus::Io.send_message('logs', msg3, 'logs.app-core.object-string.action-log_message')
+		Mbus::Io.shutdown
+
+		# Now, read some messages, disconnecting partway through.
+		ENV['MBUS_APP'] = 'logging-consumer'
+		Mbus::Io.initialize('logging-consumer', @opts)
+		continue_to_process = true
+
+		messages_read = 0
+		while continue_to_process
+			msg = Mbus::Io.read_message('logs', 'messages')
+
+			if (msg == :queue_empty) || msg.nil?
+				continue_to_process = false
+			else
+				messages_read += 1
+				Mbus::Io.ack_queue('logs', 'messages')
+			end
+
+			if messages_read == 1
+				Mbus::Io.shutdown # stops bunny which should yield connection error
+			end
+		end
+		Mbus::Io.shutdown
+
+		messages_read.should == 3
+	end
+
 end
