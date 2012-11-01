@@ -32,10 +32,10 @@ module Mbus
 			@max_sleeps               = initialize_max_sleeps
 			if queues_list.size < 1
 				@continue_to_process = false
-				puts "#{log_prefix}.initialize Error - no queues defined for this app name" unless silent?
+				logger.info "Error - no queues defined for this app name"
 			else
 				Mbus::Io.start unless test_mode?
-				puts "#{log_prefix}.initialize completed" unless silent?
+				logger.info "completed"
 			end
 		end
 
@@ -68,9 +68,9 @@ module Mbus
 		end
 
 		def shutdown
-			puts "#{log_prefix}.shutdown starting" unless silent?
+			logger.info "starting"
 			Mbus::Io.shutdown
-			puts "#{log_prefix}.shutdown completed" unless silent?
+			logger.info "completed"
 		end
 
 		def process_loop
@@ -107,13 +107,13 @@ module Mbus
 			@sleep_count = sleep_count + 1
 			msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed}"
 			if max_sleeps < 0
-				puts "#{log_prefix}.#{method} - #{msg}" unless silent?
+				logger.info "#{method} - #{msg}"
 				sleep(time)
 			else
 				if sleep_count >= max_sleeps
 					@continue_to_process = false
 				else
-					puts "#{log_prefix}.#{method} - #{msg}" unless silent?
+					logger.info "#{method} - #{msg}"
 					sleep(time)
 				end
 			end
@@ -122,7 +122,7 @@ module Mbus
 		def handle_no_message(qw)
 			qw.next_read_time!(queue_empty_sleep_time)
 			if queue_empty_sleep_time < 0
-				puts "#{log_prefix}.handle_no_message - no messages; terminating" unless silent?
+				logger.info "- no messages; terminating"
 				@continue_to_process = false
 			end
 		end
@@ -131,7 +131,7 @@ module Mbus
 			begin
 				process_message(qw, json_msg_str)
 			rescue Exception => e
-				puts "#{log_prefix}.process_and_ack_message Exception #{e.class.name} #{e.message}" unless silent?
+				logger.info "Exception #{e.class.name} #{e.message}"
 			ensure
 				Mbus::Io.ack_queue(qw.exch, qw.name) if qw.ack?
 			end
@@ -145,13 +145,13 @@ module Mbus
 			# Message handler classes should extend Mbus::BaseMessageHandler, and implement
 			# the "handle(msg_hash)" method, where the arg a message Hash object.
 			begin
-				puts "#{log_prefix}.process_message: #{json_msg_str.inspect}" if verbose?
+				logger.debug json_msg_str.inspect
 				msg_hash = JSON.parse(json_msg_str)
 				handler = Object.const_get(handler_classname(msg_hash)).new(options)
 				handler.handle(msg_hash)
 				@messages_processed = messages_processed + 1
 			rescue Exception => e
-				puts "#{log_prefix}.process_message Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}" unless silent?
+				logger.info "Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}"
 			end
 		end
 
@@ -169,12 +169,53 @@ module Mbus
 			result
 		end
 
+		# Deprecated.
 		def classname
 			self.class.name
 		end
 
+		# Deprecated.
 		def log_prefix
 			"#{app_name} #{classname}"
+		end
+
+		class Logger
+			attr_reader :base
+
+			def initialize(base)
+				@base = base
+				if defined?(::Rails)
+					@logger = ::Rails.logger
+				else
+					@logger = ::Logger.new(STDOUT)
+					if silent?
+						@logger.level = ::Logger::WARN
+					elsif verbose?
+						@logger.level = ::Logger::DEBUG
+					else
+						@logger.level = ::Logger::INFO
+					end
+				end
+			end
+
+			def silent?
+				base.options[:silent] == true
+			end
+
+			def verbose?
+				base.options[:verbose] == true
+			end
+
+			%w(debug info warn error fatal).each do |severity|
+				define_method(severity) do |message|
+					method = (caller[0] =~ /`(.*?)'/) && $1
+					@logger.send(severity, "#{base.app_name} #{base.class.name}.#{method} #{message}")
+				end
+			end
+		end
+
+		def logger
+			@logger ||= Logger.new(self)
 		end
 
 	end
