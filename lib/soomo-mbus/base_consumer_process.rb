@@ -18,10 +18,6 @@ module Mbus
 		attr_reader :queue_empty_sleep_time
 
 		def initialize(opts={})
-			base_initialize(opts)
-		end
-
-		def base_initialize(opts={})
 			@options  = opts
 			@app_name = ENV['MBUS_APP']
 			Mbus::Io.initialize(app_name, options)
@@ -36,12 +32,12 @@ module Mbus
 			@max_sleeps               = initialize_max_sleeps
 			if queues_list.size < 1
 				@continue_to_process = false
-				puts "#{log_prefix}.base_initialize Error - no queues defined for this app name" unless silent?
+				puts "#{log_prefix}.initialize Error - no queues defined for this app name" unless silent?
 			else
 				unless test_mode?
 					Mbus::Io.start
 				end
-				puts "#{log_prefix}.base_initialize completed" unless silent?
+				puts "#{log_prefix}.initialize completed" unless silent?
 			end
 		end
 
