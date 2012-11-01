@@ -82,7 +82,13 @@ module Mbus
 		end
 
 		def process_loop
+			%w(INT TERM).each do |signal|
+				Signal.trap(signal) { $shutdown = true }
+			end
+
 			while continue_to_process
+				return if $shutdown # handle trapped signal
+
 				@continue_to_process = false if test_mode?
 				@cycles = cycles + 1
 				queues_list.each { | qw |

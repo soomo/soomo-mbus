@@ -199,5 +199,27 @@ describe Mbus::BaseConsumerProcess do
 		process.sleep_count.should == 2
 	end
 
+	it "should trap INT and TERM signals." do
+		ENV['MBUS_APP'] = 'logging-consumer'
+		ENV['MBUS_QE_TIME'] = '1'
+
+		run_process = Proc.new do
+			fork do
+				process = Mbus::BaseConsumerProcess.new({:verbose => false, :silent => true})
+				process.process_loop
+				exit!(99)
+			end
+		end
+
+		%w(INT TERM).each do |signal|
+			pid = run_process.call
+			puts "Started child process with PID = #{pid}"
+			sleep(1) # ensure things are started.
+			Process.kill(signal, pid)
+			Process.wait
+			$?.exitstatus.should == 99
+		end
+	end
+
 end
 
