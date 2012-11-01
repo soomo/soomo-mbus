@@ -30,7 +30,7 @@ module Mbus
 			@queue_empty_sleep_time   = initialize_queue_empty_sleep_time
 			@queues_list              = initialize_queues_list
 			@max_sleeps               = initialize_max_sleeps
-			if queues_list.size < 1
+			if queues_list.empty?
 				@continue_to_process = false
 				logger.info "Error - no queues defined for this app name"
 			else
@@ -59,14 +59,6 @@ module Mbus
 			@options[:test_mode] # presence = truth
 		end
 
-		def verbose?
-			@options[:verbose] == true
-		end
-
-		def silent?
-			@options[:silent] == true
-		end
-
 		def shutdown
 			logger.info "starting"
 			Mbus::Io.shutdown
@@ -85,12 +77,12 @@ module Mbus
 				@cycles = cycles + 1
 				queues_list.each do |queue|
 					if queue.should_read?
-						json_msg_str = Mbus::Io.read_message(queue.exch, queue.name)
-						if (json_msg_str == :queue_empty) || json_msg_str.nil?
+						serialized_message = Mbus::Io.read_message(queue.exch, queue.name)
+						if (serialized_message == :queue_empty) || serialized_message.nil?
 							handle_no_message(queue)
 						else
 							@messages_read = messages_read + 1
-							process_and_ack_message(queue, json_msg_str)
+							process_and_ack_message(queue, serialized_message)
 						end
 					end
 				end
@@ -119,25 +111,25 @@ module Mbus
 			end
 		end
 
-		def handle_no_message(qw)
-			qw.next_read_time!(queue_empty_sleep_time)
+		def handle_no_message(queue)
+			queue.next_read_time!(queue_empty_sleep_time)
 			if queue_empty_sleep_time < 0
 				logger.info "- no messages; terminating"
 				@continue_to_process = false
 			end
 		end
 
-		def process_and_ack_message(qw, json_msg_str)
+		def process_and_ack_message(queue, serialized_message)
 			begin
-				process_message(qw, json_msg_str)
+				process_message(queue, serialized_message)
 			rescue Exception => e
 				logger.info "Exception #{e.class.name} #{e.message}"
 			ensure
-				Mbus::Io.ack_queue(qw.exch, qw.name) if qw.ack?
+				Mbus::Io.ack_queue(queue.exch, queue.name) if queue.ack?
 			end
 		end
 
-		def process_message(qw, json_msg_str)
+		def process_message(queue, serialized_message)
 			# Dynamically create and invoke a message handler class.
 			# All message hander class names are in the form: OooAaaMessageHandler - where
 			# Ooo is the "object" value in the message (i.e. - classname, ex. - 'Student'),
@@ -145,28 +137,44 @@ module Mbus
 			# Message handler classes should extend Mbus::BaseMessageHandler, and implement
 			# the "handle(msg_hash)" method, where the arg a message Hash object.
 			begin
-				logger.debug json_msg_str.inspect
-				msg_hash = JSON.parse(json_msg_str)
-				handler = Object.const_get(handler_classname(msg_hash)).new(options)
-				handler.handle(msg_hash)
+				logger.debug serialized_message.inspect
+
+				message_hash = JSON.parse(serialized_message)
+				handler = handler_for_action(message_hash['action'])
+				handler.handle(message_hash)
+
 				@messages_processed = messages_processed + 1
 			rescue Exception => e
-				logger.info "Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}"
+				logger.error "Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}"
 			end
 		end
 
-		def handler_classname(msg_hash)
-			if msg_hash && msg_hash.kind_of?(Hash) && (action = msg_hash['action'])
-				classname_map[action] ||= classname_from_action(action)
-			else
-				nil
-			end
+		def handler_for_action(action)
+			Object.const_get(classname_from_action(action)).new(options)
 		end
 
 		def classname_from_action(action)
-			result = action.tr('-','_').split('_').map {|token| token.capitalize }.join
-			result << "MessageHandler"
-			result
+			unless classname = classname_map[action]
+				classname = action.tr('-','_').split('_').map {|token| token.capitalize }.join
+				classname << "MessageHandler"
+				classname_map[action] = classname
+			end
+			return classname
+		end
+
+		# Deprecated.
+		def handler_classname(message_hash)
+			classname_from_action(message_hash['action'])
+		end
+
+		# Deprecated.
+		def verbose?
+			@options[:verbose] == true
+		end
+
+		# Deprecated.
+		def silent?
+			@options[:silent] == true
 		end
 
 		# Deprecated.
