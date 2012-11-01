@@ -2,7 +2,6 @@ require 'simplecov'
 SimpleCov.start
 
 require 'rspec'
-require 'active_record'
 require 'bunny'
 require 'json'
 require 'redis'
@@ -26,9 +25,6 @@ end
 class LogMessageMessageHandler < Mbus::BaseMessageHandler
 	def handle(msg)
 		@message = msg
-		if data.include?('please disconnect from the database')
-			ActiveRecord::Base.connection.disconnect!
-		end
 	end
 end
 

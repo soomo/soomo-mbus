@@ -4,10 +4,9 @@ module Mbus
 	#
 	# Internal: This class is intended to be used "as-is" for any process which
 	# consumes messages from the message bus.  It may also be subclassed.
-	# It provides basic redis (configuration), database, and rabbitmq connectivity.
+	# It provides basic redis (configuration) and rabbitmq connectivity.
 	# It also provides a standard run-loop for processing messages; the loop
-	# includes database connection checking, message-handler creation, and
-	# message ack logic.
+	# includes message-handler creation and message ack logic.
 	#
 	# Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
@@ -16,7 +15,7 @@ module Mbus
 		attr_reader :options, :app_name, :continue_to_process, :cycles
 		attr_reader :queues_list, :messages_read, :messages_processed, :classname_map
 		attr_reader :sleep_count, :max_sleeps
-		attr_reader :queue_empty_sleep_time, :db_disconnected_count, :db_disconnect_sleep_time
+		attr_reader :queue_empty_sleep_time
 
 		def initialize(opts={})
 			base_initialize(opts)
@@ -30,10 +29,8 @@ module Mbus
 			@cycles                   = 0
 			@messages_read            = 0
 			@messages_processed       = 0
-			@db_disconnected_count    = 0
 			@sleep_count              = 0
 			@classname_map            = {}
-			@db_disconnect_sleep_time = initialize_db_disconnected_sleep_time
 			@queue_empty_sleep_time   = initialize_queue_empty_sleep_time
 			@queues_list              = initialize_queues_list
 			@max_sleeps               = initialize_max_sleeps
@@ -43,15 +40,9 @@ module Mbus
 			else
 				unless test_mode?
 					Mbus::Io.start
-					establish_db_connection if use_database?
 				end
 				puts "#{log_prefix}.base_initialize completed" unless silent?
 			end
-		end
-
-		def initialize_db_disconnected_sleep_time
-			value = ENV['MBUS_DBC_TIME'] ||= '20'
-			value.to_i
 		end
 
 		def initialize_queue_empty_sleep_time
@@ -98,43 +89,19 @@ module Mbus
 			while continue_to_process
 				@continue_to_process = false if test_mode?
 				@cycles = cycles + 1
-				if database_ok?
-					queues_list.each { | qw |
-						if qw.should_read?
-							json_msg_str = Mbus::Io.read_message(qw.exch, qw.name)
-							if (json_msg_str == :queue_empty) || json_msg_str.nil?
-								handle_no_message(qw)
-							else
-								@messages_read = messages_read + 1
-								process_and_ack_message(qw, json_msg_str)
-							end
+				queues_list.each { | qw |
+					if qw.should_read?
+						json_msg_str = Mbus::Io.read_message(qw.exch, qw.name)
+						if (json_msg_str == :queue_empty) || json_msg_str.nil?
+							handle_no_message(qw)
+						else
+							@messages_read = messages_read + 1
+							process_and_ack_message(qw, json_msg_str)
 						end
-					}
-					go_to_sleep('process_loop - cycle queue(s) empty', queue_empty_sleep_time) if should_sleep?
-				end
+					end
+				}
+				go_to_sleep('process_loop - cycle queue(s) empty', queue_empty_sleep_time) if should_sleep?
 			end
-		end
-
-		def database_ok?
-			ok = false
-			if use_database?
-				begin
-					ActiveRecord::Base.connection.verify!
-					ok = ActiveRecord::Base.connection.active?
-				rescue Exception => e
-					puts "#{log_prefix}.database_ok? cycle #{cycles} - DB Exception #{e.inspect}" unless silent?
-					go_to_sleep('check_database - exception', db_disconnect_sleep_time)
-				end
-
-				unless ok
-					@db_disconnected_count = db_disconnected_count + 1
-					go_to_sleep('check_database - not active', db_disconnect_sleep_time)
-					establish_db_connection  # try to reconnect after sleeping a while
-				end
-			else
-				ok = true
-			end
-			ok
 		end
 
 		def should_sleep?
@@ -144,7 +111,7 @@ module Mbus
 
 		def go_to_sleep(method, time)
 			@sleep_count = sleep_count + 1
-			msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed} ddc: #{db_disconnected_count}"
+			msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed}"
 			if max_sleeps < 0
 				puts "#{log_prefix}.#{method} - #{msg}" unless silent?
 				sleep(time)
@@ -224,44 +191,5 @@ module Mbus
 			"#{app_name} #{classname}"
 		end
 
-		def use_database?
-			database_url != 'none'
-		end
-
-		def database_url
-			env_var_name = ENV['MBUS_DB']
-			env_var_name = 'DATABASE_URL' if env_var_name.nil?
-			(env_var_name.to_s.downcase == 'none') ? 'none' : ENV[env_var_name]
-		end
-
-		def database_connection_active?
-			(use_database?) ? ActiveRecord::Base.connection.active? : false
-		end
-
-		def establish_db_connection
-			db_url = database_url
-			if db_url == 'none'
-				false
-			else
-				db = URI.parse(db_url)
-				ActiveRecord::Base.establish_connection(
-					:adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
-					:host     => db.host,
-					:username => db.user,
-					:password => db.password,
-					:database => db.path[1..-1],
-					:encoding => 'utf8'
-				)
-				if ActiveRecord::Base.connection && ActiveRecord::Base.connection.active?
-					puts "#{log_prefix}.establish_db_connection - DB connection established to URL: #{db_url}" unless silent?
-					true
-				else
-					puts "#{log_prefix}.establish_db_connection - WARNING: DB connection NOT established to URL: #{db_url}" unless silent?
-					false
-				end
-			end
-		end
-
 	end
-
 end

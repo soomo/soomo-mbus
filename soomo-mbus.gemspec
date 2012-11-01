@@ -18,10 +18,8 @@ Gem::Specification.new do |s|
 	s.rubyforge_project = "soomo-mbus"
 
 	s.add_runtime_dependency 'bunny', '0.7.8'
-	s.add_runtime_dependency 'activerecord'
 	s.add_runtime_dependency 'json'
 	s.add_runtime_dependency 'redis'
-	s.add_runtime_dependency 'pg'
 
 	s.add_development_dependency 'rake'
 	s.add_development_dependency 'rspec'
