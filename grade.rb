@@ -15,18 +15,18 @@
 
 class Grade < ActiveRecord::Base
 
-  include Mbus::Producer
+	include Mbus::Producer
 
-  after_create  { mbus_enqueue(self, 'create') }
-  after_update  { mbus_enqueue(self, 'update') }
-  after_destroy { mbus_enqueue(self, 'destroy') }
+	after_create  { mbus_enqueue(self, 'create') }
+	after_update  { mbus_enqueue(self, 'update') }
+	after_destroy { mbus_enqueue(self, 'destroy') }
 
-  def miscalculate
-    begin
-      1 / 0
-    rescue Exception => e
-      mbus_enqueue(self, 'exception')
-    end
-  end
+	def miscalculate
+		begin
+			1 / 0
+		rescue Exception => e
+			mbus_enqueue(self, 'exception')
+		end
+	end
 end
 
