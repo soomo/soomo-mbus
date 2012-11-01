@@ -172,5 +172,32 @@ describe Mbus::BaseConsumerProcess do
 		process.messages_read.should == 0
 	end
 
+	it "should execute its run process with at least 1 sleep" do
+		# First, drain the queue of messages.
+		ENV['MBUS_APP'] = 'logging-consumer'
+		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
+		Mbus::Io.app_name.should == 'logging-consumer'
+		continue_to_process = true
+		while continue_to_process
+			msg = Mbus::Io.read_message('logs', 'messages')
+			if (msg == :queue_empty) || msg.nil?
+				continue_to_process = false
+			else
+				#puts "base_consumer_process_spec draining msg: #{msg}"
+				Mbus::Io.ack_queue('logs', 'messages')
+			end
+		end
+		Mbus::Io.shutdown
+
+		# Run the consumer
+		ENV['MBUS_APP'] = 'logging-consumer'
+		ENV['MBUS_QE_TIME'] = '1'
+		ENV['MBUS_MAX_SLEEPS'] = '2'
+		process = Mbus::BaseConsumerProcess.new({:verbose => false, :silent => true})
+		process.process_loop
+		process.max_sleeps.should  == 2
+		process.sleep_count.should == 2
+	end
+
 end
 
