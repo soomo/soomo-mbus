@@ -34,9 +34,7 @@ module Mbus
 				@continue_to_process = false
 				puts "#{log_prefix}.initialize Error - no queues defined for this app name" unless silent?
 			else
-				unless test_mode?
-					Mbus::Io.start
-				end
+				Mbus::Io.start unless test_mode?
 				puts "#{log_prefix}.initialize completed" unless silent?
 			end
 		end
@@ -47,11 +45,9 @@ module Mbus
 		end
 
 		def initialize_queues_list
-			wrapper_list = []
-			Mbus::Config::queues_for_app(app_name).each { | entry |
-				wrapper_list << Mbus::QueueWrapper.new(entry)
-			}
-			wrapper_list
+			Mbus::Config.queues_for_app(app_name).map do |entry|
+				Mbus::QueueWrapper.new(entry)
+			end
 		end
 
 		def initialize_max_sleeps
@@ -64,21 +60,17 @@ module Mbus
 		end
 
 		def verbose?
-			@options[:verbose] && @options[:verbose] == true
+			@options[:verbose] == true
 		end
 
 		def silent?
-			@options[:silent] && @options[:silent] == true
+			@options[:silent] == true
 		end
 
 		def shutdown
-			base_shutdown
-		end
-
-		def base_shutdown
-			puts "#{log_prefix}.base_shutdown starting" unless silent?
+			puts "#{log_prefix}.shutdown starting" unless silent?
 			Mbus::Io.shutdown
-			puts "#{log_prefix}.base_shutdown completed" unless silent?
+			puts "#{log_prefix}.shutdown completed" unless silent?
 		end
 
 		def process_loop
@@ -91,23 +83,23 @@ module Mbus
 
 				@continue_to_process = false if test_mode?
 				@cycles = cycles + 1
-				queues_list.each { | qw |
-					if qw.should_read?
-						json_msg_str = Mbus::Io.read_message(qw.exch, qw.name)
+				queues_list.each do |queue|
+					if queue.should_read?
+						json_msg_str = Mbus::Io.read_message(queue.exch, queue.name)
 						if (json_msg_str == :queue_empty) || json_msg_str.nil?
-							handle_no_message(qw)
+							handle_no_message(queue)
 						else
 							@messages_read = messages_read + 1
-							process_and_ack_message(qw, json_msg_str)
+							process_and_ack_message(queue, json_msg_str)
 						end
 					end
-				}
+				end
 				go_to_sleep('process_loop - cycle queue(s) empty', queue_empty_sleep_time) if should_sleep?
 			end
 		end
 
 		def should_sleep?
-			queues_list.each { | qw | return false if qw.should_read? }
+			queues_list.each { |q| return false if q.should_read? }
 			true
 		end
 
