@@ -55,6 +55,17 @@ module Mbus
 			(Time.now.to_i) >= next_read_time
 		end
 
+		def next_message
+			queue.pop(:ack => ack?, :nowait => nowait?)
+		end
+
+		def ack
+			queue.ack if ack?
+		end
+
+		def status
+			queue.status
+		end
 	end
 
 end

@@ -132,22 +132,19 @@ module Mbus
 		end
 
 		def self.delete_exchange(exch_name, opts={})
-			ew = @@exchanges[exch_name]
-			(ew.nil?) ? nil : ew.exchange.delete(opts)
+			if exchange = @@exchanges[exch_name]
+				exchange.delete(opts)
+			end
 		end
 
 		def self.send_message(exch_name, json_str_msg, routing_key)
 			result = nil
 			begin
 				with_reconnect_on_failure('send_message') do
-					ew = @@exchanges[exch_name.to_s]
-					if ew && json_str_msg && routing_key
-							ew.exchange.publish(json_str_msg,
-								{:key        => routing_key,
-								 :persistent => ew.persistent?,
-								 :mandatory  => ew.mandatory?,
-								 :immediate  => ew.immediate?})
-						puts "#{log_prefix}.send_message exch: '#{ew.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
+					exchange = @@exchanges[exch_name.to_s]
+					if exchange && json_str_msg && routing_key
+						exchange.publish(json_str_msg, routing_key)
+						puts "#{log_prefix}.send_message exch: '#{exchange.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
 						result = json_str_msg
 					else
 						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
@@ -162,10 +159,11 @@ module Mbus
 		def self.status
 			hash = {}
 			begin
-				@@queues.keys.sort.each { | fullname |
-					qw = @@queues[fullname]
-					hash[fullname] = qw.queue.status if qw
-				}
+				@@queues.keys.sort.each do |fullname|
+					if queue = @@queues[fullname]
+						hash[fullname] = queue.status
+					end
+				end
 			rescue Exception => excp
 				puts "#{log_prefix}.status Exception - #{excp.message} #{excp.inspect}"
 			end
@@ -175,9 +173,8 @@ module Mbus
 		def self.ack_queue(exch_name, queue_name)
 			begin
 				with_reconnect_on_failure('ack_queue') do
-					qw = @@queues[fullname(exch_name, queue_name)]
-					if qw && qw.queue && qw.ack?
-						qw.queue.ack
+					if queue = @@queues[fullname(exch_name, queue_name)]
+						queue.ack
 					end
 				end
 			rescue Exception => excp
@@ -186,15 +183,17 @@ module Mbus
 		end
 
 		def self.read_message(exch_name, queue_name)
+			payload = nil
 			begin
 				with_reconnect_on_failure('read_message') do
-					qw = @@queues[fullname(exch_name, queue_name)]
-					return qw.queue.pop(:ack => qw.ack?, :nowait => qw.nowait?)[:payload] if qw
+					if queue = @@queues[fullname(exch_name, queue_name)]
+						payload = queue.next_message[:payload]
+					end
 				end
 			rescue Exception => e
 				puts exception_message('read_message', e, exch_name, queue_name)
 			end
-			nil
+			payload
 		end
 
 		def self.exception_message(method, exception, exchange_name='N/A', queue_name='N/A')

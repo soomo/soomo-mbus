@@ -43,6 +43,20 @@ module Mbus
 			(val.nil?) ? false : val
 		end
 
+		def publish(message, routing_key)
+			opts = {
+				:key        => routing_key,
+				:persistent => persistent?,
+				:mandatory  => mandatory?,
+				:immediate  => immediate?
+			}
+			exchange.publish(message, opts)
+		end
+
+		def delete(opts={})
+			exchange.delete(opts)
+		end
+
 	end
 
 end
