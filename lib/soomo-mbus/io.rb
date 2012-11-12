@@ -139,17 +139,19 @@ module Mbus
 		def self.send_message(exch_name, json_str_msg, routing_key)
 			result = nil
 			begin
-				ew = @@exchanges[exch_name.to_s]
-				if ew && json_str_msg && routing_key
-					ew.exchange.publish(json_str_msg,
-						{:key        => routing_key,
-						 :persistent => ew.persistent?,
-						 :mandatory  => ew.mandatory?,
-						 :immediate  => ew.immediate?})
-					puts "#{log_prefix}.send_message exch: '#{ew.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
-					result = json_str_msg
-				else
-					puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
+				with_reconnect_on_failure('send_message') do
+					ew = @@exchanges[exch_name.to_s]
+					if ew && json_str_msg && routing_key
+							ew.exchange.publish(json_str_msg,
+								{:key        => routing_key,
+								 :persistent => ew.persistent?,
+								 :mandatory  => ew.mandatory?,
+								 :immediate  => ew.immediate?})
+						puts "#{log_prefix}.send_message exch: '#{ew.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
+						result = json_str_msg
+					else
+						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
+					end
 				end
 			rescue Exception => excp
 				puts "#{log_prefix}.send_message Exception - #{excp.message} #{excp.inspect}"
@@ -172,9 +174,11 @@ module Mbus
 
 		def self.ack_queue(exch_name, queue_name)
 			begin
-				qw = @@queues[fullname(exch_name, queue_name)]
-				if qw && qw.queue && qw.ack?
-					qw.queue.ack
+				with_reconnect_on_failure('ack_queue') do
+					qw = @@queues[fullname(exch_name, queue_name)]
+					if qw && qw.queue && qw.ack?
+						qw.queue.ack
+					end
 				end
 			rescue Exception => excp
 				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
@@ -182,19 +186,10 @@ module Mbus
 		end
 
 		def self.read_message(exch_name, queue_name)
-			retries = 0
 			begin
-				qw = @@queues[fullname(exch_name, queue_name)]
-				return qw.queue.pop(:ack => qw.ack?, :nowait => qw.nowait?)[:payload] if qw
-			rescue Bunny::ConnectionError => e
-				puts exception_message('read_message', e, exch_name, queue_name)
-				retries += 1
-				if retries <= 3
-					puts "Reconnecting (attempt: #{retries})"
-					reconnect
-					retry
-				else
-					raise
+				with_reconnect_on_failure('read_message') do
+					qw = @@queues[fullname(exch_name, queue_name)]
+					return qw.queue.pop(:ack => qw.ack?, :nowait => qw.nowait?)[:payload] if qw
 				end
 			rescue Exception => e
 				puts exception_message('read_message', e, exch_name, queue_name)
@@ -207,6 +202,22 @@ module Mbus
 			" - #{exception.message}\n#{exception.inspect}"
 		end
 
-	end
+		def self.with_reconnect_on_failure(method, &block)
+			retries = 0
+			begin
+				yield
+			rescue Bunny::ConnectionError => e
+				puts exception_message(method, e)
+				retries += 1
+				if retries <= 3
+					puts "Reconnecting (attempt: #{retries})"
+					reconnect
+					retry
+				else
+					raise
+				end
+			end
+		end
 
+	end
 end
