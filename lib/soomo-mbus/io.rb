@@ -203,13 +203,16 @@ module Mbus
 
 		def self.with_reconnect_on_failure(method, &block)
 			retries = 0
+			delay = 1
 			begin
 				yield
 			rescue Bunny::ProtocolError, Bunny::ConnectionError => e
 				puts exception_message(method, e)
 				retries += 1
-				if retries <= 3
-					puts "Reconnecting (attempt: #{retries})"
+				if retries <= 6 # will sleep at most 2^6 = 64s before process dies.
+					delay <<= 1 # 2^x
+					puts "Reconnecting after #{delay}s delay (attempt: #{retries})"
+					sleep(delay)
 					reconnect
 					retry
 				else
