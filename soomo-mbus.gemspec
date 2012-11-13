@@ -43,7 +43,6 @@ Gem::Specification.new do |s|
 	s.files << 'lib/soomo-mbus/sample_consumer_process.rb'
 	s.files << 'lib/soomo-mbus/version.rb'
 	s.files << 'lib/tasks/mbus.rake'
-	s.files << 'lib/tasks/mbus_db.rake'
 
 	s.test_files = Dir.glob("{spec,test}/**/*.rb")
 
