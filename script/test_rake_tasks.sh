@@ -7,18 +7,6 @@ MBUS_HOME=redis://localhost:6379/#MBUS_CONFIG
 export MBUS_HOME
 
 echo '---'
-echo '*** mbus_db:drop'
-rake mbus_db:drop --trace
-
-echo '---'
-echo '*** mbus_db:create'
-rake mbus_db:create --trace
-
-echo '---'
-echo '*** mbus_db:migrate'
-rake mbus_db:migrate --trace
-
-echo '---'
 echo '*** mbus:config:create'
 rake mbus:config:create --trace
 
@@ -57,11 +45,6 @@ rake mbus:sample_process app=logging-consumer MBUS_DB=none MBUS_QE_TIME=stop --t
 echo '---'
 echo '*** mbus:read_messages_from_all'
 rake mbus:read_messages_from_all n=999 --trace
-
-# echo '---'
-# echo '*** mbus_db:create_vote'
-# rake mbus_db:create_vote cname=ron vname=paul --trace
-
 
 echo 'done'
 
