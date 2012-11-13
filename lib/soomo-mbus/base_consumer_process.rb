@@ -74,6 +74,8 @@ module Mbus
 				return if $shutdown # handle trapped signal
 
 				@continue_to_process = false if test_mode?
+				go_to_sleep('process_loop - delay', options[:delay]) if options[:delay]
+
 				@cycles = cycles + 1
 				queues_list.each do |queue|
 					if queue.should_read?
