@@ -205,7 +205,7 @@ module Mbus
 			retries = 0
 			begin
 				yield
-			rescue Bunny::ConnectionError => e
+			rescue Bunny::ProtocolError, Bunny::ConnectionError => e
 				puts exception_message(method, e)
 				retries += 1
 				if retries <= 3
