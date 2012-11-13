@@ -36,7 +36,8 @@ module Mbus
 			required_keys = [:name, :type, :persistent]
 			specifications = [
 				{:name => 'soomo'},
-				{:name => 'logs', :persistent => false}
+				{:name => 'logs', :persistent => false},
+				{:name => 'test'}
 			]
 			specifications.each { | spec |
 				obj = apply_defaults(spec, defaults)
@@ -68,7 +69,10 @@ module Mbus
 				{:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
 				{:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
 				{:exch => 'logs', :app => 'sle',  :object => 'hash',   :action => 'log_message'},
-				{:exch => 'logs', :app => 'cac',  :object => 'hash',   :action => 'log_message'}
+				{:exch => 'logs', :app => 'cac',  :object => 'hash',   :action => 'log_message'},
+
+				{:exch => 'test', :app => 'test', :object => 'string', :action => 'test_message'},
+				{:exch => 'test', :app => 'test', :object => 'hash',   :action => 'test_message'}
 			]
 			specifications.each { | spec |
 				obj = business_function(spec, defaults)
@@ -97,7 +101,9 @@ module Mbus
 
 				{:name => 'auditor-audit_document_responses', :key => '#.object-hash.action-audit_document_response.#'},
 
-				{:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'}
+				{:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'},
+
+				{:exch => 'test', :name => 'test-messages', :ack => false, :key => '#.action-test_message'}
 			]
 			specifications.each { | spec |
 				obj = apply_defaults(spec, defaults)
@@ -137,6 +143,9 @@ module Mbus
 
 				{:app => 'auditor', :name => 'auditor-consumer',
 				 :queues => ['soomo|auditor-audit_document_responses']},
+
+				{:app => 'test', :name => 'test-consumer',
+				 :queues => ['test|test-messages']}
 			]
 			specifications.each { | spec |
 				obj = apply_defaults(spec, defaults)
