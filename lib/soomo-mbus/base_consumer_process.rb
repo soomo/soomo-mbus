@@ -1,267 +1,232 @@
 module Mbus
 
-  # :markup: tomdoc
-  #
-  # Internal: This class is intended to be used "as-is" for any process which
-  # consumes messages from the message bus.  It may also be subclassed.
-  # It provides basic redis (configuration), database, and rabbitmq connectivity.
-  # It also provides a standard run-loop for processing messages; the loop
-  # includes database connection checking, message-handler creation, and
-  # message ack logic.
-  #
-  # Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
+	# :markup: tomdoc
+	#
+	# Internal: This class is intended to be used "as-is" for any process which
+	# consumes messages from the message bus.  It may also be subclassed.
+	# It provides basic redis (configuration) and rabbitmq connectivity.
+	# It also provides a standard run-loop for processing messages; the loop
+	# includes message-handler creation and message ack logic.
+	#
+	# Chris Joakim, Locomotive LLC, for Soomo Publishing, 2012/03/02
 
-  class BaseConsumerProcess
+	class BaseConsumerProcess
 
-    attr_reader :options, :app_name, :continue_to_process, :cycles
-    attr_reader :queues_list, :messages_read, :messages_processed, :classname_map
-    attr_reader :sleep_count, :max_sleeps
-    attr_reader :queue_empty_sleep_time, :db_disconnected_count, :db_disconnect_sleep_time
+		attr_reader :options, :app_name, :continue_to_process, :cycles
+		attr_reader :queues_list, :messages_read, :messages_processed, :classname_map
+		attr_reader :sleep_count, :max_sleeps
+		attr_reader :queue_empty_sleep_time
 
-    def initialize(opts={})
-      base_initialize(opts)
-    end
+		def initialize(opts={})
+			@options  = opts
+			@app_name = ENV['MBUS_APP']
+			Mbus::Io.initialize(app_name, options)
+			@continue_to_process      = true
+			@cycles                   = 0
+			@messages_read            = 0
+			@messages_processed       = 0
+			@sleep_count              = 0
+			@classname_map            = {}
+			@queue_empty_sleep_time   = initialize_queue_empty_sleep_time
+			@queues_list              = initialize_queues_list
+			@max_sleeps               = initialize_max_sleeps
+			if queues_list.empty?
+				@continue_to_process = false
+				logger.info "Error - no queues defined for this app name"
+			else
+				Mbus::Io.start unless test_mode?
+				logger.info "completed"
+			end
+		end
 
-    def base_initialize(opts={})
-      @options  = opts
-      @app_name = ENV['MBUS_APP']
-      Mbus::Io.initialize(app_name, options)
-      @continue_to_process      = true
-      @cycles                   = 0
-      @messages_read            = 0
-      @messages_processed       = 0
-      @db_disconnected_count    = 0
-      @sleep_count              = 0
-      @classname_map            = {}
-      @db_disconnect_sleep_time = initialize_db_disconnected_sleep_time
-      @queue_empty_sleep_time   = initialize_queue_empty_sleep_time
-      @queues_list              = initialize_queues_list
-      @max_sleeps               = initialize_max_sleeps
-      if queues_list.size < 1
-        @continue_to_process = false
-        puts "#{log_prefix}.base_initialize Error - no queues defined for this app name" unless silent?
-      else
-        unless test_mode?
-          Mbus::Io.start
-          establish_db_connection if use_database?
-        end
-        puts "#{log_prefix}.base_initialize completed" unless silent?
-      end
-    end
+		def initialize_queue_empty_sleep_time
+			value = ENV['MBUS_QE_TIME'] ||= '15'
+			(value.downcase == 'stop') ? -1 : value.to_i
+		end
 
-    def initialize_db_disconnected_sleep_time
-      value = ENV['MBUS_DBC_TIME'] ||= '20'
-      value.to_i
-    end
+		def initialize_queues_list
+			Mbus::Config.queues_for_app(app_name).map do |entry|
+				Mbus::QueueWrapper.new(entry)
+			end
+		end
 
-    def initialize_queue_empty_sleep_time
-      value = ENV['MBUS_QE_TIME'] ||= '15'
-      (value.downcase == 'stop') ? -1 : value.to_i
-    end
+		def initialize_max_sleeps
+			value = ENV['MBUS_MAX_SLEEPS'] ||= '-1'
+			value.to_i
+		end
 
-    def initialize_queues_list
-      wrapper_list = []
-      Mbus::Config::queues_for_app(app_name).each { | entry |
-        wrapper_list << Mbus::QueueWrapper.new(entry)
-      }
-      wrapper_list
-    end
+		def test_mode?
+			@options[:test_mode] # presence = truth
+		end
 
-    def initialize_max_sleeps
-      value = ENV['MBUS_MAX_SLEEPS'] ||= '-1'
-      value.to_i
-    end
+		def shutdown
+			logger.info "starting"
+			Mbus::Io.shutdown
+			logger.info "completed"
+		end
 
-    def test_mode?
-      @options[:test_mode] # presence = truth
-    end
+		def process_loop
+			%w(INT TERM).each do |signal|
+				Signal.trap(signal) { $shutdown = true }
+			end
 
-    def verbose?
-      @options[:verbose] && @options[:verbose] == true
-    end
+			while continue_to_process
+				return if $shutdown # handle trapped signal
 
-    def silent?
-      @options[:silent] && @options[:silent] == true
-    end
+				@continue_to_process = false if test_mode?
+				go_to_sleep('process_loop - delay', options[:delay]) if options[:delay]
 
-    def shutdown
-      base_shutdown
-    end
+				@cycles = cycles + 1
+				queues_list.each do |queue|
+					if queue.should_read?
+						serialized_message = Mbus::Io.read_message(queue.exch, queue.name)
+						if (serialized_message == :queue_empty) || serialized_message.nil?
+							handle_no_message(queue)
+						else
+							@messages_read = messages_read + 1
+							process_and_ack_message(queue, serialized_message)
+						end
+					end
+				end
+				go_to_sleep('process_loop - cycle queue(s) empty', queue_empty_sleep_time) if should_sleep?
+			end
+		end
 
-    def base_shutdown
-      puts "#{log_prefix}.base_shutdown starting" unless silent?
-      Mbus::Io.shutdown
-      puts "#{log_prefix}.base_shutdown completed" unless silent?
-    end
+		def should_sleep?
+			queues_list.each { |q| return false if q.should_read? }
+			true
+		end
 
-    def process_loop
-      while continue_to_process
-        @continue_to_process = false if test_mode?
-        @cycles = cycles + 1
-        if database_ok?
-          queues_list.each { | qw |
-            if qw.should_read?
-              json_msg_str = Mbus::Io.read_message(qw.exch, qw.name)
-              if (json_msg_str == :queue_empty) || json_msg_str.nil?
-                handle_no_message(qw)
-              else
-                @messages_read = messages_read + 1
-                process_and_ack_message(qw, json_msg_str)
-              end
-            end
-          }
-          go_to_sleep('process_loop - cycle queue(s) empty', queue_empty_sleep_time) if should_sleep?
-        end
-      end
-    end
+		def go_to_sleep(method, time)
+			@sleep_count = sleep_count + 1
+			msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed}"
+			if max_sleeps < 0
+				logger.info "#{method} - #{msg}"
+				sleep(time)
+			else
+				if sleep_count >= max_sleeps
+					@continue_to_process = false
+				else
+					logger.info "#{method} - #{msg}"
+					sleep(time)
+				end
+			end
+		end
 
-    def database_ok?
-      ok = false
-      if use_database?
-        begin
-          ActiveRecord::Base.connection.verify!
-          ok = ActiveRecord::Base.connection.active?
-        rescue Exception => e
-          puts "#{log_prefix}.database_ok? cycle #{cycles} - DB Exception #{e.inspect}" unless silent?
-          go_to_sleep('check_database - exception', db_disconnect_sleep_time)
-        end
+		def handle_no_message(queue)
+			queue.next_read_time!(queue_empty_sleep_time)
+			if queue_empty_sleep_time < 0
+				logger.info "- no messages; terminating"
+				@continue_to_process = false
+			end
+		end
 
-        unless ok
-          @db_disconnected_count = db_disconnected_count + 1
-          go_to_sleep('check_database - not active', db_disconnect_sleep_time)
-          establish_db_connection  # try to reconnect after sleeping a while
-        end
-      else
-        ok = true
-      end
-      ok
-    end
+		def process_and_ack_message(queue, serialized_message)
+			begin
+				process_message(queue, serialized_message)
+			rescue Exception => e
+				logger.info "Exception #{e.class.name} #{e.message}"
+			ensure
+				Mbus::Io.ack_queue(queue.exch, queue.name) if queue.ack?
+			end
+		end
 
-    def should_sleep?
-      queues_list.each { | qw | return false if qw.should_read? }
-      true
-    end
+		def process_message(queue, serialized_message)
+			# Dynamically create and invoke a message handler class.
+			# All message hander class names are in the form: OooAaaMessageHandler - where
+			# Ooo is the "object" value in the message (i.e. - classname, ex. - 'Student'),
+			# and Aaa is the "action" value in the message (ex. - 'created').
+			# Message handler classes should extend Mbus::BaseMessageHandler, and implement
+			# the "handle(msg_hash)" method, where the arg a message Hash object.
+			begin
+				logger.debug serialized_message.inspect
 
-    def go_to_sleep(method, time)
-      @sleep_count = sleep_count + 1
-      msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed} ddc: #{db_disconnected_count}"
-      if max_sleeps < 0
-        puts "#{log_prefix}.#{method} - #{msg}" unless silent?
-        sleep(time)
-      else
-        if sleep_count >= max_sleeps
-          @continue_to_process = false
-        else
-          puts "#{log_prefix}.#{method} - #{msg}" unless silent?
-          sleep(time)
-        end
-      end
-    end
+				message_hash = JSON.parse(serialized_message)
+				handler = handler_for_action(message_hash['action'])
+				handler.handle(message_hash)
 
-    def handle_no_message(qw)
-      qw.next_read_time!(queue_empty_sleep_time)
-      if queue_empty_sleep_time < 0
-        puts "#{log_prefix}.handle_no_message - no messages; terminating" unless silent?
-        @continue_to_process = false
-      end
-    end
+				@messages_processed = messages_processed + 1
+			rescue Exception => e
+				logger.error "Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}"
+			end
+		end
 
-    def process_and_ack_message(qw, json_msg_str)
-      begin
-        process_message(qw, json_msg_str)
-      rescue Exception => e
-        puts "#{log_prefix}.process_and_ack_message Exception #{e.class.name} #{e.message}" unless silent?
-      ensure
-        Mbus::Io.ack_queue(qw.exch, qw.name) if qw.ack?
-      end
-    end
+		def handler_for_action(action)
+			Object.const_get(classname_from_action(action)).new(options)
+		end
 
-    def process_message(qw, json_msg_str)
-      # Dynamically create and invoke a message handler class.
-      # All message hander class names are in the form: OooAaaMessageHandler - where
-      # Ooo is the "object" value in the message (i.e. - classname, ex. - 'Student'),
-      # and Aaa is the "action" value in the message (ex. - 'created').
-      # Message handler classes should extend Mbus::BaseMessageHandler, and implement
-      # the "handle(msg_hash)" method, where the arg a message Hash object.
-      begin
-        puts "#{log_prefix}.process_message: #{json_msg_str.inspect}" if verbose?
-        msg_hash = JSON.parse(json_msg_str)
-        handler = Object.const_get(handler_classname(msg_hash)).new(options)
-        handler.handle(msg_hash)
-        @messages_processed = messages_processed + 1
-      rescue Exception => e
-        puts "#{log_prefix}.process_message Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}" unless silent?
-      end
-    end
+		def classname_from_action(action)
+			unless classname = classname_map[action]
+				classname = action.tr('-','_').split('_').map {|token| token.capitalize }.join
+				classname << "MessageHandler"
+				classname_map[action] = classname
+			end
+			return classname
+		end
 
-    def handler_classname(msg_hash)
-      if msg_hash && msg_hash.class == Hash
-        action = msg_hash['action']
-        if action
-          if classname_map.has_key?(action)
-             classname_map[action]
-          else
-             sio = StringIO.new
-             action.tr('-','_').split('_').each { | token | sio << token.capitalize }
-             sio << 'MessageHandler'
-             cname = sio.string
-             classname_map[action] = cname
-             cname
-          end
-        else
-          nil
-        end
-      else
-        nil
-      end
-    end
+		# Deprecated.
+		def handler_classname(message_hash)
+			classname_from_action(message_hash['action'])
+		end
 
-    def classname
-      self.class.name
-    end
+		# Deprecated.
+		def verbose?
+			@options[:verbose] == true
+		end
 
-    def log_prefix
-      "#{app_name} #{classname}"
-    end
+		# Deprecated.
+		def silent?
+			@options[:silent] == true
+		end
 
-    def use_database?
-      database_url != 'none'
-    end
+		# Deprecated.
+		def classname
+			self.class.name
+		end
 
-    def database_url
-      env_var_name = ENV['MBUS_DB']
-      env_var_name = 'DATABASE_URL' if env_var_name.nil?
-      (env_var_name.to_s.downcase == 'none') ? 'none' : ENV[env_var_name]
-    end
+		# Deprecated.
+		def log_prefix
+			"#{app_name} #{classname}"
+		end
 
-    def database_connection_active?
-      (use_database?) ? ActiveRecord::Base.connection.active? : false
-    end
+		class Logger
+			attr_reader :base
 
-    def establish_db_connection
-      db_url = database_url
-      if db_url == 'none'
-        false
-      else
-        db = URI.parse(db_url)
-        ActiveRecord::Base.establish_connection(
-          :adapter  => db.scheme == 'postgres' ? 'postgresql' : db.scheme,
-          :host     => db.host,
-          :username => db.user,
-          :password => db.password,
-          :database => db.path[1..-1],
-          :encoding => 'utf8'
-        )
-        if ActiveRecord::Base.connection && ActiveRecord::Base.connection.active?
-          puts "#{log_prefix}.establish_db_connection - DB connection established to URL: #{db_url}" unless silent?
-          true
-        else
-          puts "#{log_prefix}.establish_db_connection - WARNING: DB connection NOT established to URL: #{db_url}" unless silent?
-          false
-        end
-      end
-    end
+			def initialize(base)
+				@base = base
+				if defined?(::Rails)
+					@logger = ::Rails.logger
+				else
+					@logger = ::Logger.new(STDOUT)
+					if silent?
+						@logger.level = ::Logger::WARN
+					elsif verbose?
+						@logger.level = ::Logger::DEBUG
+					else
+						@logger.level = ::Logger::INFO
+					end
+				end
+			end
 
-  end
+			def silent?
+				base.options[:silent] == true
+			end
 
+			def verbose?
+				base.options[:verbose] == true
+			end
+
+			%w(debug info warn error fatal).each do |severity|
+				define_method(severity) do |message|
+					method = (caller[0] =~ /`(.*?)'/) && $1
+					@logger.send(severity, "#{base.app_name} #{base.class.name}.#{method} #{message}")
+				end
+			end
+		end
+
+		def logger
+			@logger ||= Logger.new(self)
+		end
+
+	end
 end
