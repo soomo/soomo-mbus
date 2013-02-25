@@ -50,6 +50,7 @@ module Mbus
 			required_keys = [:exch, :app, :object, :action, :routing_key]
 			specifications = [
 				{:app => 'core', :object => 'hash', :action => 'response_update'},
+				{:app => 'core', :object => 'hash', :action => 'grade_update'},
 				{:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
@@ -93,6 +94,7 @@ module Mbus
 				{:name => 'ca-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 
 				{:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
+				{:name => 'bb-grades',       :key => '#.object-hash.action-grade_update.#'},
 
 				{:name => 'sle-discussion_posts', :key => '#.object-hash.action-discussion_post_create.#'},
 				{:name => 'sle-discussion_comments', :key => '#.object-hash.action-discussion_comment_create.#'},
@@ -131,7 +133,10 @@ module Mbus
 				]},
 
 				{:app => 'bb-pusher', :name => 'bb-pusher-consumer',
-				 :queues => ['soomo|bb-responses']},
+				 :queues => [
+				 	'soomo|bb-responses',
+				 	'soomo|bb-grades'
+				]},
 
 				{:app => 'core', :name => 'core-consumer',
 				 :queues => [
