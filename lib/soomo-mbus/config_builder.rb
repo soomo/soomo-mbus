@@ -51,6 +51,7 @@ module Mbus
 			specifications = [
 				{:app => 'core', :object => 'hash', :action => 'response_update'},
 				{:app => 'core', :object => 'hash', :action => 'grade_update'},
+				{:app => 'core', :object => 'fixnum', :action => 'quiz_response_update'},
 				{:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
@@ -87,6 +88,7 @@ module Mbus
 			specifications = [
 				{:name => 'core-ca_course_create', :key => '#.object-hash.action-course_create.#'},
 				{:name => 'core-ca_section_create', :key => '#.object-hash.action-section_create.#'},
+				{:name => 'core-quiz_response_update', :key => '#.object-fixnum.action-quiz_response_update.#'},
 				{:name => 'core-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 
 				{:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
@@ -143,7 +145,8 @@ module Mbus
 					'logs|status-messages',
 					'soomo|core-ca_course_create',
 					'soomo|core-ca_section_create',
-					'soomo|core-audit_document_requests'
+					'soomo|core-audit_document_requests',
+					'soomo|core-quiz_response_update'
 				]},
 
 				{:app => 'auditor', :name => 'auditor-consumer',
