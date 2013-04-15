@@ -221,5 +221,28 @@ describe Mbus::BaseConsumerProcess do
 		end
 	end
 
+	it "should exit with code = 1 if failure and ACK required" do
+
+		# put an exceptional message into the queue.
+		ENV['MBUS_APP'] = 'core'
+		Mbus::Io.initialize('core', verbose: false, silent: true)
+		producer = TestProducer.new
+		message = producer.doit({ exception: 'boom' }, 'log_message')
+		Mbus::Io.shutdown
+
+		# read off the exceptional message
+		pid = fork do
+			ENV['MBUS_APP'] = 'logging-consumer'
+			ENV['MBUS_QE_TIME'] = '1'
+			process = Mbus::BaseConsumerProcess.new(verbose: false, silent: true)
+			process.process_loop
+		end
+		puts "Started child process with PID = #{pid}"
+		Process.wait(pid)
+
+		# the exceptional message should result in a non-success exit status
+		$?.exitstatus.should == 1
+	end
+
 end
 
