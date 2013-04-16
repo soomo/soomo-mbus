@@ -122,12 +122,16 @@ module Mbus
 		end
 
 		def process_and_ack_message(queue, serialized_message)
-			begin
-				process_message(queue, serialized_message)
-			rescue Exception => e
-				logger.info "Exception #{e.class.name} #{e.message}"
-			ensure
-				Mbus::Io.ack_queue(queue.exch, queue.name) if queue.ack?
+			success = process_message(queue, serialized_message)
+
+			if queue.ack?
+				if success
+					Mbus::Io.ack_queue(queue.exch, queue.name)
+				else
+					logger.info "Failed to process message and ACK required. Exiting.."
+					@continue_to_process = false
+					Signal.trap('EXIT') { exit 1 } # force non-success exit
+				end
 			end
 		end
 
@@ -146,9 +150,13 @@ module Mbus
 				handler.handle(message_hash)
 
 				@messages_processed = messages_processed + 1
+				success = true
 			rescue Exception => e
-				logger.error "Exception exch: #{qw.exch} queue: #{qw.name} #{e.class.name} #{e.message}\n#{e.backtrace}"
+				success = false
+				logger.error "Exception exch: #{queue.exch} queue: #{queue.name} #{e.class.name} #{e.message}\n#{e.backtrace.join("\n")}"
 			end
+
+			return success
 		end
 
 		def handler_for_action(action)

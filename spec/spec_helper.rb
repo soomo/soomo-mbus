@@ -27,6 +27,10 @@ end
 class LogMessageMessageHandler < Mbus::BaseMessageHandler
 	def handle(msg)
 		@message = msg
+		if (data = @message['data']) && (e = data['exception'])
+			raise(e)
+		end
+		@message
 	end
 end
 
