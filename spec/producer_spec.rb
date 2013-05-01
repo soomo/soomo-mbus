@@ -69,4 +69,8 @@ describe Mbus::Producer do
 		json_obj['sent_at'].should < epoch + 2
 	end
 
+	it 'should add mbus_enqueue method to Mbus module and alias to .enqueue' do
+		Mbus.should respond_to :enqueue
+	end
+
 end

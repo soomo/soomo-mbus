@@ -43,4 +43,9 @@ module Mbus
 
 	end
 
+	class << self
+		include Producer
+		alias_method :enqueue, :mbus_enqueue
+	end
+
 end
