@@ -34,7 +34,9 @@ module Mbus
 				@continue_to_process = false
 				logger.info "Error - no queues defined for this app name"
 			else
-				Mbus::Io.start unless test_mode?
+				unless test_mode?
+					exit unless Mbus::Io.start
+				end
 				logger.info "completed"
 			end
 		end
