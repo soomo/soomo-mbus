@@ -104,14 +104,22 @@ module Mbus
 			msg = "cycle #{cycles}, sleep # #{sleep_count} for #{time}, mr: #{messages_read}, mp: #{messages_processed}"
 			if max_sleeps < 0
 				logger.info "#{method} - #{msg}"
-				sleep(time)
+				n_second_sleep(time)
 			else
 				if sleep_count >= max_sleeps
 					@continue_to_process = false
 				else
 					logger.info "#{method} - #{msg}"
-					sleep(time)
+					n_second_sleep(time)
 				end
+			end
+		end
+
+		# Allow us to break out of sleep if TERM received
+		def n_second_sleep(n)
+			n.times do
+				sleep 1
+				break if $shutdown
 			end
 		end
 
