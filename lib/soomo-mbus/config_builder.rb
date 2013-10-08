@@ -49,6 +49,8 @@ module Mbus
 			defaults = {:exch => default_root_routing_key}
 			required_keys = [:exch, :app, :object, :action, :routing_key]
 			specifications = [
+				{:app => 'scheduler', :object => 'hash', :action => 'scheduled_task'},
+
 				{:app => 'core', :object => 'hash', :action => 'response_update'},
 				{:app => 'core', :object => 'hash', :action => 'grade_update'},
 				{:app => 'core', :object => 'fixnum', :action => 'quiz_response_update'},
@@ -86,6 +88,7 @@ module Mbus
 			defaults = {:exch => default_exchange, :durable => true, :ack => true}
 			required_keys = [:exch, :name, :durable, :ack, :key]
 			specifications = [
+				{:name => 'core-scheduled_task', :key => '#.object-hash.action-scheduled_task.#'},
 				{:name => 'core-ca_course_create', :key => '#.object-hash.action-course_create.#'},
 				{:name => 'core-ca_section_create', :key => '#.object-hash.action-section_create.#'},
 				{:name => 'core-quiz_response_update', :key => '#.object-fixnum.action-quiz_response_update.#'},
@@ -143,6 +146,7 @@ module Mbus
 				{:app => 'core', :name => 'core-consumer',
 				 :queues => [
 					'logs|status-messages',
+					'soomo|core-scheduled_task',
 					'soomo|core-ca_course_create',
 					'soomo|core-ca_section_create',
 					'soomo|core-audit_document_requests',
