@@ -205,6 +205,7 @@ module Mbus
 														:password => uri.password)
 					if redis
 						3.times do |try|
+							sleep(try)
 							json_str = redis.get(key)
 							if json_str
 								json_obj = JSON.parse(json_str)
@@ -222,7 +223,6 @@ module Mbus
 								break # out of 3.times loop
 							else
 								puts "#{log_prefix}.read_parse_config - value of redis key #{key} is nil at #{url} (try ##{try + 1})" unless silent?
-								sleep(try+1)
 							end
 						end
 					else
