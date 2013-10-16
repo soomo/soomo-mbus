@@ -35,6 +35,7 @@ module Mbus
 				false
 			end
 
+			tries = 0
 			begin
 				url = Mbus::Config.rabbitmq_url
 				puts "#{log_prefix}.starting - rabbitmq_url: #{url}" unless silent?
@@ -47,6 +48,13 @@ module Mbus
 				end
 				puts "#{log_prefix}.start - completed" unless silent?
 				true
+			rescue Bunny::ServerDownError => excp
+				puts "#{log_prefix}.start Exception - #{excp.message} #{excp.inspect}" unless silent?
+				tries += 1
+				if tries <= 3
+					sleep(tries) # 1, 2, 3
+					retry
+				end
 			rescue Exception => excp
 				puts "#{log_prefix}.start Exception - #{excp.message} #{excp.inspect}" unless silent?
 				false

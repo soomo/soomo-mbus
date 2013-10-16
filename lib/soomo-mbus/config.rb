@@ -204,21 +204,26 @@ module Mbus
 														:port => uri.port,
 														:password => uri.password)
 					if redis
-						json_str = redis.get(key)
-						if json_str
-							json_obj = JSON.parse(json_str)
-							if json_obj
-								if valid_config_json?(json_obj)
-									puts "#{log_prefix}.read_parse_config - using the valid JSON from location #{loc}" unless silent?
-									return json_obj
+						3.times do |try|
+							json_str = redis.get(key)
+							if json_str
+								json_obj = JSON.parse(json_str)
+								if json_obj
+									if valid_config_json?(json_obj)
+										puts "#{log_prefix}.read_parse_config - using the valid JSON from location #{loc}" unless silent?
+										return json_obj
+									else
+										puts "#{log_prefix}.read_parse_config - JSON at location #{loc} is invalid" unless silent?
+									end
 								else
-									puts "#{log_prefix}.read_parse_config - JSON at location #{loc} is invalid" unless silent?
+									puts "#{log_prefix}.read_parse_config - value of redis key #{key} is unparsable at #{url}" unless silent?
 								end
+
+								break # out of 3.times loop
 							else
-								puts "#{log_prefix}.read_parse_config - value of redis key #{key} is unparsable at #{url}" unless silent?
+								puts "#{log_prefix}.read_parse_config - value of redis key #{key} is nil at #{url} (try ##{try + 1})" unless silent?
+								sleep(try+1)
 							end
-						else
-							puts "#{log_prefix}.read_parse_config - value of redis key #{key} is nil at #{url}" unless silent?
 						end
 					else
 						puts "#{log_prefix}.read_parse_config - unable to connect to redis at #{url}" unless silent?
