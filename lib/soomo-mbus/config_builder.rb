@@ -63,6 +63,7 @@ module Mbus
 				{:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
 				{:app => 'discussions',  :object => 'hash', :action => 'discussion_comment_create'},
 
+				{:app => 'ca', :object => 'hash', :action => 'rebroadcast_response_updates'},
 				{:app => 'ca', :object => 'hash', :action => 'course_create'},
 				{:app => 'ca', :object => 'hash', :action => 'section_create'},
 
@@ -93,6 +94,7 @@ module Mbus
 				{:name => 'core-ca_section_create', :key => '#.object-hash.action-section_create.#'},
 				{:name => 'core-quiz_response_update', :key => '#.object-fixnum.action-quiz_response_update.#'},
 				{:name => 'core-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
+				{:name => 'core-rebroadcast_response_updates', :key => '#.object-hash.action-rebroadcast_response_updates.#'},
 
 				{:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
 				{:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
@@ -105,6 +107,7 @@ module Mbus
 				{:name => 'sle-discussion_comments', :key => '#.object-hash.action-discussion_comment_create.#'},
 				{:name => 'sle-enrollments', :key => '#.object-hash.action-enrollment_update.#'},
 				{:name => 'sle-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
+				{:name => 'sle-rebroadcast_response_updates', :key => '#.object-hash.action-rebroadcast_response_updates.#'},
 
 				{:name => 'auditor-audit_document_responses', :key => '#.object-hash.action-audit_document_response.#'},
 
@@ -131,6 +134,7 @@ module Mbus
 
 				{:app => 'sle', :name => 'sle-consumer',
 				 :queues => [
+					'soomo|sle-rebroadcast_response_updates',
 					'soomo|sle-discussion_posts',
 					'soomo|sle-discussion_comments',
 					'soomo|sle-enrollments',
@@ -146,6 +150,7 @@ module Mbus
 				{:app => 'core', :name => 'core-consumer',
 				 :queues => [
 					'logs|status-messages',
+					'soomo|core-rebroadcast_response_updates',
 					'soomo|core-scheduled_task',
 					'soomo|core-ca_course_create',
 					'soomo|core-ca_section_create',
