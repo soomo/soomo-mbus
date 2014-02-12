@@ -68,6 +68,7 @@ module Mbus
 				{:app => 'ca', :object => 'hash', :action => 'course_create'},
 				{:app => 'ca', :object => 'hash', :action => 'section_create'},
 
+				{:app => 'ca-consumer', :object => 'hash', :action => 'rebroadcast_response_updates'},
 				{:app => 'ca-consumer', :object => 'hash', :action => 'audit_document_response'},
 
 				{:app => 'auditor', :object => 'hash', :action => 'audit_document_request'},
