@@ -59,6 +59,7 @@ module Mbus
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
 
 				{:app => 'sle',  :object => 'hash', :action => 'response_update'},
+				{:app => 'sle-consumer',  :object => 'hash', :action => 'response_update'},
 
 				{:app => 'discussions',  :object => 'hash', :action => 'discussion_post_create'},
 				{:app => 'discussions',  :object => 'hash', :action => 'discussion_comment_create'},
