@@ -147,8 +147,8 @@ module Mbus
 
 				{:app => 'bb-pusher', :name => 'bb-pusher-consumer',
 				 :queues => [
-				 	'soomo|bb-responses',
-				 	'soomo|bb-grades'
+					'soomo|bb-responses',
+					'soomo|bb-grades',
 					'soomo|bb-gradebook_schema_updates'
 				]},
 
