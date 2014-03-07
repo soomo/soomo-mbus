@@ -56,6 +56,7 @@ module Mbus
 				{:app => 'core', :object => 'hash', :action => 'gradebook_schema_update'},
 				{:app => 'core', :object => 'fixnum', :action => 'quiz_response_update'},
 				{:app => 'core', :object => 'hash', :action => 'enrollment_update'},
+				{:app => 'core', :object => 'hash', :action => 'external_event'},
 
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
 
@@ -98,6 +99,7 @@ module Mbus
 				{:name => 'core-quiz_response_update', :key => '#.object-fixnum.action-quiz_response_update.#'},
 				{:name => 'core-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 				{:name => 'core-rebroadcast_response_updates', :key => '#.object-hash.action-rebroadcast_response_updates.#'},
+				{:name => 'core-external_event', :key => '#.object-hash.action-external_event.#'},
 
 				{:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
 				{:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
@@ -160,7 +162,8 @@ module Mbus
 					'soomo|core-ca_course_create',
 					'soomo|core-ca_section_create',
 					'soomo|core-audit_document_requests',
-					'soomo|core-quiz_response_update'
+					'soomo|core-quiz_response_update',
+					'soomo|core-external_event'
 				]},
 
 				{:app => 'auditor', :name => 'auditor-consumer',
