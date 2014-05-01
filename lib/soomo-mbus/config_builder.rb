@@ -57,6 +57,7 @@ module Mbus
 				{:app => 'core', :object => 'fixnum', :action => 'quiz_response_update'},
 				{:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 				{:app => 'core', :object => 'hash', :action => 'external_event'},
+				{:app => 'core', :object => 'hash', :action => 'lti_launch_event'},
 
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
 
@@ -108,6 +109,7 @@ module Mbus
 				{:name => 'bb-responses',    :key => '#.object-hash.action-response_update.#'},
 				{:name => 'bb-grades',       :key => '#.object-hash.action-grade_update.#'},
 				{:name => 'bb-gradebook_schema_updates', :key => '#.object-hash.action-gradebook_schema_update.#'},
+				{:name => 'bb-lti_launch_events', :key => '#.object-hash.action-lti_launch_event.#'},
 
 				{:name => 'sle-discussion_posts', :key => '#.object-hash.action-discussion_post_create.#'},
 				{:name => 'sle-discussion_comments', :key => '#.object-hash.action-discussion_comment_create.#'},
@@ -151,7 +153,8 @@ module Mbus
 				 :queues => [
 					'soomo|bb-responses',
 					'soomo|bb-grades',
-					'soomo|bb-gradebook_schema_updates'
+					'soomo|bb-gradebook_schema_updates',
+					'soomo|bb-lti_launch_events'
 				]},
 
 				{:app => 'core', :name => 'core-consumer',
