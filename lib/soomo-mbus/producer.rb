@@ -15,7 +15,7 @@ module Mbus
 				entry = Mbus::Config.lookup_routing_key(obj, action)
 				if entry.nil?
 					key = Mbus::Config.routing_lookup_key(obj, action)
-					puts "Mbus::Producer.mbus_enqueue - message not sent; undefined routing key for '#{key}'" unless Mbus::Io.silent?
+					puts "Mbus::Producer.mbus_enqueue - message not sent; undefined routing key for '#{key}'" unless Mbus::Config.silent?
 					nil
 				else
 					exch, rkey = entry['exch'], entry['routing_key']
@@ -24,7 +24,7 @@ module Mbus
 					Mbus::Io.send_message(exch, json_str, rkey)
 				end
 			rescue Exception => e
-				puts "Mbus::Producer.mbus_enqueue Exception on #{obj.class.name} #{action} e: #{e.inspect}\n#{e.backtrace}" unless Mbus::Io.silent?
+				puts "Mbus::Producer.mbus_enqueue Exception on #{obj.class.name} #{action} e: #{e.inspect}\n#{e.backtrace}" unless Mbus::Config.silent?
 				nil
 			end
 		end

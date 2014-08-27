@@ -94,6 +94,7 @@ module Mbus
 		def self.silent?
 			@@options[:silent] && @@options[:silent] == true
 		end
+		private_class_method :silent?
 
 		def self.start_bunny?
 			(@@options[:start_bunny].to_s == 'false') ? false : true
