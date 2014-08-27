@@ -78,6 +78,7 @@ module Mbus
 		def self.classname
 			'Mbus::Io'
 		end
+		private_class_method :classname
 
 		def self.app_name
 			@@app_name
