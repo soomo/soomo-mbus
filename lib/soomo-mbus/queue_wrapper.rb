@@ -62,10 +62,6 @@ module Mbus
 		def ack
 			queue.ack if ack?
 		end
-
-		def status
-			queue.status
-		end
 	end
 
 end

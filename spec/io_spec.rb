@@ -126,20 +126,6 @@ describe Mbus::Io do
 		Mbus::Io.fullname('exch', 'queue92').should == 'exch|queue92'
 	end
 
-	it 'should implement method status' do
-		ENV['MBUS_APP'] = 'all'
-		Mbus::Io.initialize('all', @opts)
-		hash = Mbus::Io.status
-		hash.should_not be_nil
-		hash.size.should == 5
-		hash['logs|messages'].should_not be_nil
-		hash.keys.sort.each_with_index { | key, idx |
-			val = hash[key]
-			val.has_key?(:message_count).should be_true
-			val.has_key?(:consumer_count).should be_true
-		}
-	end
-
 	it 'should send messages, read messages, and ack messages' do
 		# First, drain the queue of messages.
 		ENV['MBUS_APP'] = 'logging-consumer'

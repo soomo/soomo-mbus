@@ -266,7 +266,6 @@ callback examples using the sqlite database.
     rake mbus:read_messages            # Read messages; a= e= q= n=
     rake mbus:read_messages_from_all   # Read messages from all exchanges and keys, n=
     rake mbus:send_messages            # Send message(s), e= k= n=
-    rake mbus:status                   # Display the status of the Mbus
 
     rake mbus_db:create                # Create the (example sqlite) database.
     rake mbus_db:create_grade          # Create a Grade(s), n=
