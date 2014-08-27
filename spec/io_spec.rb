@@ -24,12 +24,12 @@ describe Mbus::Io do
 
 	it 'should implement method app_name' do
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.app_name.should == 'core'
+		Mbus::Io.send(:app_name).should == 'core'
 		Mbus::Config.app_name.should == 'core'
 
 		ENV['MBUS_APP'] = nil
 		Mbus::Io.initialize(nil, @opts)
-		Mbus::Io.app_name.should be_nil
+		Mbus::Io.send(:app_name).should be_nil
 	end
 
 	it 'should implement method classname' do
@@ -79,7 +79,6 @@ describe Mbus::Io do
 	it 'producer apps should have exchanges but no queues' do
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.app_name.should == 'core'
 		Mbus::Io.exchanges.should_not be_nil
 		Mbus::Io.exchanges.size.should == 2
 
@@ -100,7 +99,6 @@ describe Mbus::Io do
 	it 'consumer apps should have exchanges and queues' do
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', @opts)
-		Mbus::Io.app_name.should == 'logging-consumer'
 		Mbus::Io.exchanges.should_not be_nil
 		Mbus::Io.exchanges.size.should == 2
 
@@ -139,7 +137,6 @@ describe Mbus::Io do
 	it 'should implement method status' do
 		ENV['MBUS_APP'] = 'all'
 		Mbus::Io.initialize('all', @opts)
-		Mbus::Io.app_name.should == 'all'
 		hash = Mbus::Io.status
 		hash.should_not be_nil
 		hash.size.should == 5
@@ -155,7 +152,6 @@ describe Mbus::Io do
 		# First, drain the queue of messages.
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', @opts)
-		Mbus::Io.app_name.should == 'logging-consumer'
 		continue_to_process = true
 		while continue_to_process
 			msg = Mbus::Io.read_message('logs', 'messages')
@@ -170,7 +166,6 @@ describe Mbus::Io do
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.app_name.should == 'core'
 		msg1 = {:n => 1, :io_spec => true, :epoch => Time.now.to_i}.to_json
 		msg2 = {:n => 2, :io_spec => true, :epoch => Time.now.to_i}.to_json
 		msg3 = "3|true|#{Time.now.to_i}".to_json
@@ -182,7 +177,6 @@ describe Mbus::Io do
 		# Next, read and verify the new messages.
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', @opts)
-		Mbus::Io.app_name.should == 'logging-consumer'
 		continue_to_process, messages = true, []
 		while continue_to_process
 			msg = Mbus::Io.read_message('logs', 'messages')
@@ -234,7 +228,6 @@ describe Mbus::Io do
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.app_name.should == 'core'
 		msg1 = {:n => 1, :io_spec => true, :epoch => Time.now.to_i}.to_json
 		msg2 = {:n => 2, :io_spec => true, :epoch => Time.now.to_i}.to_json
 		msg3 = "3|true|#{Time.now.to_i}".to_json
