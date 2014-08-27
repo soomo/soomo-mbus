@@ -39,7 +39,7 @@ describe Mbus::Io do
 
 	it 'should implement method log_prefix' do
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.log_prefix.should == 'core Mbus::Io'
+		Mbus::Io.send(:log_prefix).should == 'core Mbus::Io'
 	end
 
 	it 'should implement method verbose?' do

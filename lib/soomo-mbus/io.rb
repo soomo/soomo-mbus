@@ -86,6 +86,7 @@ module Mbus
 		def self.log_prefix
 			"#{app_name} #{classname}"
 		end
+		private_class_method :log_prefix
 
 		def self.verbose?
 			@@options[:verbose] && @@options[:verbose] == true
