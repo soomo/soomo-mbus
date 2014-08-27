@@ -182,31 +182,6 @@ module Mbus
 			return classname
 		end
 
-		# Deprecated.
-		def handler_classname(message_hash)
-			classname_from_action(message_hash['action'])
-		end
-
-		# Deprecated.
-		def verbose?
-			@options[:verbose] == true
-		end
-
-		# Deprecated.
-		def silent?
-			@options[:silent] == true
-		end
-
-		# Deprecated.
-		def classname
-			self.class.name
-		end
-
-		# Deprecated.
-		def log_prefix
-			"#{app_name} #{classname}"
-		end
-
 		class Logger
 			attr_reader :base
 
