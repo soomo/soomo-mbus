@@ -2,6 +2,21 @@ require 'spec_helper'
 
 # rake spec SPEC=spec/config_validator_spec.rb
 
+def validate_config_object(json_obj, result, expected_errors, format_errors=false)
+	validator = Mbus::ConfigValidator.new(json_obj)
+	validator.valid?.should == result
+	if format_errors
+		sio = StringIO.new
+		sio << '['
+		validator.errors.each { | err | sio << "\"#{err}\",\n" }
+		sio << ']'
+		puts sio.string
+	end
+	validator.errors.size.should == expected_errors.size
+	validator.errors.should == expected_errors
+end
+
+
 describe Mbus::ConfigValidator do
 
 	describe "the root JSON object" do
@@ -214,7 +229,7 @@ describe Mbus::ConfigValidator do
 			validator = Mbus::ConfigValidator.new(json_obj)
 			validator.valid?.should be_true
 			report_lines = validator.report(true)
-			report_lines.size.should > 0
+			(report_lines.size > 0).should == true
 			report_lines.include?('Business Function Traceability Report').should be_true
 
 			expected1 = "Business Function: sle, response_broadcast -> 'soomo.app-sle.object-hash.action-response_broadcast'"
@@ -225,7 +240,7 @@ describe Mbus::ConfigValidator do
 			report_lines.each_with_index { | line, idx |
 				matched_index = idx if line.strip == expected1
 			}
-			matched_index.should > 0
+			(matched_index > 0).should == true
 			report_lines[matched_index].strip.should == expected1
 			report_lines[matched_index + 1].strip.should == expected2
 			report_lines[matched_index + 2].strip.should == expected3

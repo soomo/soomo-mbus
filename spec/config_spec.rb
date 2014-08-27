@@ -2,6 +2,12 @@ require 'spec_helper'
 
 # rake spec SPEC=spec/config_spec.rb
 
+def validate_exchange_list(hashes_list, expected_exch_names)
+	hashes_list.size.should == expected_exch_names.size
+	actual_names = hashes_list.collect { | entry | entry['name'] }
+	expected_exch_names.sort.should == actual_names.sort
+end
+
 describe Mbus::Config do
 
 	before(:all) do
@@ -69,7 +75,7 @@ describe Mbus::Config do
 	it 'should have routing_keys' do
 		Mbus::Config.initialize('rspec_app', @opts)
 		Mbus::Config.routing_keys.keys.sort.each_with_index { | key, idx |
-			entry = Mbus::Config.routing_keys[key]
+			_entry = Mbus::Config.routing_keys[key]
 			# puts "routing key: #{idx} #{key} = #{entry.inspect}"
 		}
 		Mbus::Config.routing_keys.size.should == 19
