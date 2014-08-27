@@ -126,14 +126,6 @@ describe Mbus::Io do
 		Mbus::Io.fullname('exch', 'queue92').should == 'exch|queue92'
 	end
 
-	it 'should implement method delete_exchange' do
-		ENV['MBUS_APP'] = 'core'
-		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.delete_exchange('undefined', {}).should be_nil
-		Mbus::Io.delete_exchange('logs', {}).should == :delete_ok
-		Mbus::Io.delete_exchange('soomo', {}).should == :delete_ok
-	end
-
 	it 'should implement method status' do
 		ENV['MBUS_APP'] = 'all'
 		Mbus::Io.initialize('all', @opts)
