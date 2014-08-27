@@ -122,6 +122,40 @@ module Mbus
 		end
 
 
+		# Internal: Sets up exchanges.  Should only be used within Mbus.
+		def self.setup_exchanges(exchange_config_entries)
+			exchange_config_entries.each do |exchange_config|
+				ew = Mbus::ExchangeWrapper.new(exchange_config)
+				if e  = @@bunny.exchange(ew.name, {:type => ew.type_symbol})
+					ew.exchange = e
+					@@exchanges[ew.name] = ew
+					log :info, "created exchange", exch: ew.name unless silent?
+				else
+					log "exchange NOT created", exch: ew.name unless silent?
+				end
+			end
+
+			return @@exchanges
+		end
+
+
+		# Internal: Sets up queues.  Should only be used within Mbus.
+		def self.setup_queues(queue_config_entries)
+			queue_config_entries.each do |queue_config|
+				qw = QueueWrapper.new(queue_config)
+				q = @@bunny.queue(qw.name, {:durable => qw.durable?})
+				if ew = @@exchanges[qw.exch]
+					q.bind(ew.name, :key => qw.key)
+					qw.queue = q
+					@@queues[qw.fullname] = qw
+					log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
+				end
+			end
+
+			return @@queues
+		end
+
+
 		## Private ##
 
 
@@ -172,34 +206,6 @@ module Mbus
 			(@@options[:start_bunny].to_s == 'false') ? false : true
 		end
 		private_class_method :start_bunny?
-
-		def self.setup_exchanges(exchange_config_entries)
-			exchange_config_entries.each do |exchange_config|
-				ew = Mbus::ExchangeWrapper.new(exchange_config)
-				if e  = @@bunny.exchange(ew.name, {:type => ew.type_symbol})
-					ew.exchange = e
-					@@exchanges[ew.name] = ew
-					log :info, "created exchange", exch: ew.name unless silent?
-				else
-					log "exchange NOT created", exch: ew.name unless silent?
-				end
-			end
-		end
-		private_class_method :setup_exchanges
-
-		def self.setup_queues(queue_config_entries)
-			queue_config_entries.each do |queue_config|
-				qw = QueueWrapper.new(queue_config)
-				q = @@bunny.queue(qw.name, {:durable => qw.durable?})
-				if ew = @@exchanges[qw.exch]
-					q.bind(ew.name, :key => qw.key)
-					qw.queue = q
-					@@queues[qw.fullname] = qw
-					log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
-				end
-			end
-		end
-		private_class_method :setup_queues
 
 		def self.fullname(exch_name, queue_name)
 			"#{exch_name}|#{queue_name}"
