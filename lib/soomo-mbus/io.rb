@@ -144,12 +144,6 @@ module Mbus
 			"#{exch_name}|#{queue_name}"
 		end
 
-		def self.delete_exchange(exch_name, opts={})
-			if exchange = @@exchanges[exch_name]
-				exchange.delete(opts)
-			end
-		end
-
 		def self.send_message(exch_name, json_str_msg, routing_key)
 			result = nil
 			begin
