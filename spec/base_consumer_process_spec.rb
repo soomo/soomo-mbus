@@ -80,41 +80,25 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_APP'] = 'test_app'
 		process = Mbus::BaseConsumerProcess.new({:test_mode => false, :start_bunny => false, :silent => true})
 		process.app_name.should == 'test_app'
-		process.classname.should == 'Mbus::BaseConsumerProcess'
-		process.log_prefix.should == 'test_app Mbus::BaseConsumerProcess'
 		process.shutdown
 	end
 
-	it 'should implement method handler_classname' do
+	it 'should implement method classname_from_action' do
 		ENV['MBUS_APP'] = 'test_app'
 		process = Mbus::BaseConsumerProcess.new(@opts)
 
-		tp = TestProducer.new
-		data = {:group => "Salt-N-Pepa", :song => "Push It"}
-
-		json_str = tp.build_message('core', {}, 'some_action', 'soomo', 'a.b.c', data)
-		json_obj = JSON.parse(json_str)
 		process.classname_map.size.should == 0
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('some_action')
 		cn.should == 'SomeActionMessageHandler'
 		process.classname_map.size.should == 1
 		process.classname_map['some_action'].should == 'SomeActionMessageHandler'
 
-		json_str = tp.build_message('core', {}, 'awesome_possum', 'soomo', 'x.y.z', data)
-		json_obj = JSON.parse(json_str)
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('awesome_possum')
 		cn.should == 'AwesomePossumMessageHandler'
 		process.classname_map.size.should == 2
 		process.classname_map['awesome_possum'].should == 'AwesomePossumMessageHandler'
 
-		json_str = tp.build_message('core', {}, 'awesome-possum', 'soomo', 'x.y.z', data)
-		json_obj = JSON.parse(json_str)
-		cn = process.handler_classname(json_obj)
-		cn.should == 'AwesomePossumMessageHandler'
-		process.classname_map.size.should == 3
-		process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
-
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('awesome-possum')
 		cn.should == 'AwesomePossumMessageHandler'
 		process.classname_map.size.should == 3
 		process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
