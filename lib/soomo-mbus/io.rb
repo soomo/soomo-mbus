@@ -16,7 +16,7 @@ module Mbus
 			@@app_name = app_name || ENV['MBUS_APP']
 
 			if @@app_name.nil?
-				puts "component=mbus at=error message=\"unable to determine MBUS_APP name\"" unless silent?
+				log :error, "unable to determine MBUS_APP name" unless silent?
 				return
 			end
 
@@ -27,35 +27,35 @@ module Mbus
 		# Public: Connects to RabbitMQ broker and setups exchanges and queues.
 		def self.start
 			begin
-				if @@bunny
-					puts "#{log_prefix}.start; stopping the previous @@bunny" unless silent?
-					@@bunny.stop
-				end
+				@@bunny.stop if @@bunny
 			rescue => e
-				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
+				log_exception('start', e)
 				false
 			end
 
 			tries = 0
 			begin
 				url = Mbus::Config.rabbitmq_url
-				puts "#{log_prefix}.starting - rabbitmq_url: #{url}" unless silent?
+
+				log :info, "starting", rabbitmq_url: url unless silent?
 				@@bunny = Bunny.new(url)
 				@@bunny.start
 				Mbus::Config::exchange_entries_for_app(@@app_name).each do |exchange_config|
 					initialize_exchange(exchange_config)
 				end
-				puts "#{log_prefix}.start - completed" unless silent?
+				log :info, "started" unless silent?
+
 				true
 			rescue Bunny::ServerDownError => e
-				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
+				log_exception('start', e)
 				tries += 1
 				if tries <= 3
 					sleep(tries) # 1, 2, 3
 					retry
 				end
+				false
 			rescue => e
-				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
+				log_exception('start', e)
 				false
 			end
 		end
@@ -63,9 +63,9 @@ module Mbus
 
 		# Public: Disconnects from RabbitMQ broker.
 		def self.shutdown
-			puts "#{log_prefix}.shutdown starting..." unless silent?
+			log :info, "shutting down" unless silent?
 			@@bunny.stop if @@bunny
-			puts "#{log_prefix}.shutdown completed." unless silent?
+			log :info, "shutdown complete" unless silent?
 		end
 
 
@@ -77,14 +77,14 @@ module Mbus
 					exchange = @@exchanges[exch_name.to_s]
 					if exchange && json_str_msg && routing_key
 						exchange.publish(json_str_msg, routing_key)
-						puts "#{log_prefix}.send_message exch: '#{exchange.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
+						log :info, "", action: 'send_message', exch: exchange.name, key: routing_key, msg: json_str_msg if verbose?
 						result = json_str_msg
 					else
-						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
+						log :warn, "invalid value(s) for exchange", action: 'send_message', exch: exch_name unless silent?
 					end
 				end
 			rescue => e
-				puts "#{log_prefix}.send_message Exception - #{e.message} #{e.inspect}"
+				log_exception('send_message', e)
 			end
 			result
 		end
@@ -100,7 +100,7 @@ module Mbus
 					end
 				end
 			rescue => e
-				puts exception_message('read_message', e, exch_name, queue_name)
+				log_exception_message('read_message', e, exch_name, queue_name)
 			end
 			payload
 		end
@@ -115,7 +115,7 @@ module Mbus
 					end
 				end
 			rescue => e
-				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{e.message} #{e.inspect}"
+				log_exception_message('ack_queue', e, exch_name, queue_name)
 			end
 		end
 
@@ -178,26 +178,26 @@ module Mbus
 				if e
 					ew.exchange = e
 					@@exchanges[ew.name] = ew
-					puts "#{log_prefix}.initialize_exchange - created exchange '#{ew.name}'" unless silent?
-					if Mbus::Config::is_consumer?(app_name)
-						Mbus::Config::queues_for_app(app_name).each { | queue_entry |
+					log :info, "created exchange", exch: ew.name unless silent?
+					if Mbus::Config.is_consumer?(app_name)
+						Mbus::Config.queues_for_app(app_name).each do | queue_entry |
 							qw = QueueWrapper.new(queue_entry) # wraps a config entry and the actual queue
 							if qw.is_exchange?(ew.name)
 								q = @@bunny.queue(qw.name, {:durable => qw.durable?})
 								q.bind(ew.name, :key => qw.key)
 								qw.queue = q
 								@@queues[qw.fullname] = qw
-								puts "#{log_prefix}.initialize_exchange - bound '#{qw.fullname}' to '#{qw.key}'" unless silent?
+								log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
 							end
-						}
+						end
 					else
 						# producers don't need to define queues
 					end
 				else
-					puts "#{log_prefix}.initialize_exchange - exchange NOT created '#{ew.name}'" unless silent?
+					log "exchange NOT created", exch: ew.name unless silent?
 				end
 			rescue => e
-				puts "#{log_prefix}.initialize_exchange Exception - #{e.message} #{e.inspect}" unless silent?
+				log_exception('initialize_exchange', e)
 			end
 		end
 		private_class_method :initialize_exchange
@@ -213,17 +213,34 @@ module Mbus
 		end
 		private_class_method :exception_message
 
+		def self.log_exception_message(*args)
+			puts exception_message(*args)
+		end
+
+		def self.log_exception(method, e)
+			log :error, e.message, method: method, exception: e.inspect unless silent?
+		end
+		private_class_method :log_exception
+
+		def self.log(level, message, extra = {})
+			statement = "component=mbus at=#{level} message=\"#{message}\""
+			extra.each do |key, value|
+				statement += " #{key}=#{value.to_json}"
+			end
+			puts statement
+		end
+
 		def self.with_reconnect_on_failure(method, &block)
 			retries = 0
 			delay = 1
 			begin
 				yield
 			rescue Bunny::ProtocolError, Bunny::ConnectionError => e
-				puts exception_message(method, e)
+				log_exception_message(method, e)
 				retries += 1
 				if retries <= 6 # will sleep at most 2^6 = 64s before process dies.
 					delay <<= 1 # 2^x
-					puts "Reconnecting after #{delay}s delay (attempt: #{retries})"
+					log :info, "Reconnecting after #{delay}s delay (attempt: #{retries})"
 					sleep(delay)
 					reconnect
 					retry
