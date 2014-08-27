@@ -44,13 +44,13 @@ describe Mbus::Io do
 
 	it 'should implement method verbose?' do
 		Mbus::Io.initialize('core', {:start_bunny => false, :silent => true})
-		Mbus::Io.verbose?.should be_false
+		Mbus::Io.send(:verbose?).should be_false
 
 		Mbus::Io.initialize('core', {:start_bunny => false, :verbose => false, :silent => true})
-		Mbus::Io.verbose?.should be_false
+		Mbus::Io.send(:verbose?).should be_false
 
 		Mbus::Io.initialize('core', {:start_bunny => false, :verbose => true, :silent => true})
-		Mbus::Io.verbose?.should be_true
+		Mbus::Io.send(:verbose?).should be_true
 	end
 
 	it 'should implement method silent?' do

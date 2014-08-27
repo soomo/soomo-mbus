@@ -92,6 +92,7 @@ module Mbus
 		def self.verbose?
 			@@options[:verbose] && @@options[:verbose] == true
 		end
+		private_class_method :verbose?
 
 		def self.silent?
 			@@options[:silent] && @@options[:silent] == true
