@@ -10,6 +10,7 @@ module Mbus
 
 		@@options, @@exchanges, @@queues, @@bunny = {}, {}, {}, nil
 
+		# Public: Initializes IO singletone to communicate with RabbitMQ broker.
 		def self.initialize(app_name=nil, opts={})
 			@@options  = opts
 			@@app_name = app_name
@@ -24,6 +25,7 @@ module Mbus
 			puts "#{log_prefix}.initialize - completed, bunny started: #{started}" unless silent?
 		end
 
+		# Public: Connects to RabbitMQ broker and setups exchanges and queues.
 		def self.start
 			begin
 				if @@bunny
@@ -61,11 +63,72 @@ module Mbus
 			end
 		end
 
+		# Public: Disconnects from RabbitMQ broker.
+		def self.shutdown
+			puts "#{log_prefix}.shutdown starting..." unless silent?
+			@@bunny.stop if @@bunny
+			puts "#{log_prefix}.shutdown completed." unless silent?
+		end
+
+		# Public: Publishes a message to the message bus.
+		def self.send_message(exch_name, json_str_msg, routing_key)
+			result = nil
+			begin
+				with_reconnect_on_failure('send_message') do
+					exchange = @@exchanges[exch_name.to_s]
+					if exchange && json_str_msg && routing_key
+						exchange.publish(json_str_msg, routing_key)
+						puts "#{log_prefix}.send_message exch: '#{exchange.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
+						result = json_str_msg
+					else
+						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
+					end
+				end
+			rescue Exception => excp
+				puts "#{log_prefix}.send_message Exception - #{excp.message} #{excp.inspect}"
+			end
+			result
+		end
+
+		# Internal: Acks last message received from queue.
+		def self.ack_queue(exch_name, queue_name)
+			begin
+				with_reconnect_on_failure('ack_queue') do
+					if queue = @@queues[fullname(exch_name, queue_name)]
+						queue.ack
+					end
+				end
+			rescue Exception => excp
+				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
+			end
+		end
+
+		# Public: Reads a message from the message bus.
+		def self.read_message(exch_name, queue_name)
+			payload = nil
+			begin
+				with_reconnect_on_failure('read_message') do
+					if queue = @@queues[fullname(exch_name, queue_name)]
+						payload = queue.next_message[:payload]
+					end
+				end
+			rescue Exception => e
+				puts exception_message('read_message', e, exch_name, queue_name)
+			end
+			payload
+		end
+
+
+		## Private ##
+
+
 		def self.reconnect; start; end
+		private_class_method :reconnect
 
 		def self.options
 			@@options
 		end
+		private_class_method :options
 
 		def self.exchanges
 			@@exchanges
@@ -107,12 +170,6 @@ module Mbus
 		end
 		private_class_method :start_bunny?
 
-		def self.shutdown
-			puts "#{log_prefix}.shutdown starting..." unless silent?
-			@@bunny.stop if @@bunny
-			puts "#{log_prefix}.shutdown completed." unless silent?
-		end
-
 		def self.initialize_exchange(exch_entry)
 			begin
 				ew = Mbus::ExchangeWrapper.new(exch_entry)
@@ -142,61 +199,18 @@ module Mbus
 				puts "#{log_prefix}.initialize_exchange Exception - #{excp.message} #{excp.inspect}" unless silent?
 			end
 		end
+		private_class_method :initialize_exchange
 
 		def self.fullname(exch_name, queue_name)
 			"#{exch_name}|#{queue_name}"
 		end
 		private_class_method :fullname
 
-		def self.send_message(exch_name, json_str_msg, routing_key)
-			result = nil
-			begin
-				with_reconnect_on_failure('send_message') do
-					exchange = @@exchanges[exch_name.to_s]
-					if exchange && json_str_msg && routing_key
-						exchange.publish(json_str_msg, routing_key)
-						puts "#{log_prefix}.send_message exch: '#{exchange.name}' key: '#{routing_key}' msg: #{json_str_msg}" if verbose?
-						result = json_str_msg
-					else
-						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
-					end
-				end
-			rescue Exception => excp
-				puts "#{log_prefix}.send_message Exception - #{excp.message} #{excp.inspect}"
-			end
-			result
-		end
-
-		def self.ack_queue(exch_name, queue_name)
-			begin
-				with_reconnect_on_failure('ack_queue') do
-					if queue = @@queues[fullname(exch_name, queue_name)]
-						queue.ack
-					end
-				end
-			rescue Exception => excp
-				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
-			end
-		end
-
-		def self.read_message(exch_name, queue_name)
-			payload = nil
-			begin
-				with_reconnect_on_failure('read_message') do
-					if queue = @@queues[fullname(exch_name, queue_name)]
-						payload = queue.next_message[:payload]
-					end
-				end
-			rescue Exception => e
-				puts exception_message('read_message', e, exch_name, queue_name)
-			end
-			payload
-		end
-
 		def self.exception_message(method, exception, exchange_name='N/A', queue_name='N/A')
 			"#{log_prefix}.#{method} Exception on exch: #{exchange_name} queue: #{queue_name}" +
 			" - #{exception.message}\n#{exception.inspect}"
 		end
+		private_class_method :exception_message
 
 		def self.with_reconnect_on_failure(method, &block)
 			retries = 0
@@ -217,6 +231,7 @@ module Mbus
 				end
 			end
 		end
+		private_class_method :with_reconnect_on_failure
 
 	end
 end
