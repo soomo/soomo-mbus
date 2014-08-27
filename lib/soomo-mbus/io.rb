@@ -102,6 +102,7 @@ module Mbus
 		def self.start_bunny?
 			(@@options[:start_bunny].to_s == 'false') ? false : true
 		end
+		private_class_method :start_bunny?
 
 		def self.shutdown
 			puts "#{log_prefix}.shutdown starting..." unless silent?

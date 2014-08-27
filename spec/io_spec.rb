@@ -60,7 +60,7 @@ describe Mbus::Io do
 
 	it 'should implement method start_bunny?' do
 		Mbus::Io.initialize('core', {:start_bunny => false, :silent => true})
-		Mbus::Io.start_bunny?.should be_false
+		Mbus::Io.send(:start_bunny?).should be_false
 	end
 
 	it 'should handle erroneous multiple start method calls' do
