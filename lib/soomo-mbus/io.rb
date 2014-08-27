@@ -40,10 +40,12 @@ module Mbus
 				log :info, "starting", rabbitmq_url: url unless silent?
 				@@bunny = Bunny.new(url)
 				@@bunny.start
-				Mbus::Config::exchange_entries_for_app(@@app_name).each do |exchange_config|
-					initialize_exchange(exchange_config)
-				end
 				log :info, "started" unless silent?
+
+				log :info, "setting up exchanges and queues" unless silent?
+				setup_exchanges(Mbus::Config.exchange_entries_for_app(@@app_name))
+				setup_queues(Mbus::Config.queues_for_app(@@app_name)) if Mbus::Config.is_consumer?
+				log :info, "setup exchanges and queues" unless silent?
 
 				true
 			rescue Bunny::ServerDownError => e
@@ -171,36 +173,33 @@ module Mbus
 		end
 		private_class_method :start_bunny?
 
-		def self.initialize_exchange(exch_entry)
-			begin
-				ew = Mbus::ExchangeWrapper.new(exch_entry)
-				e  = @@bunny.exchange(ew.name, {:type => ew.type_symbol})
-				if e
+		def self.setup_exchanges(exchange_config_entries)
+			exchange_config_entries.each do |exchange_config|
+				ew = Mbus::ExchangeWrapper.new(exchange_config)
+				if e  = @@bunny.exchange(ew.name, {:type => ew.type_symbol})
 					ew.exchange = e
 					@@exchanges[ew.name] = ew
 					log :info, "created exchange", exch: ew.name unless silent?
-					if Mbus::Config.is_consumer?(app_name)
-						Mbus::Config.queues_for_app(app_name).each do | queue_entry |
-							qw = QueueWrapper.new(queue_entry) # wraps a config entry and the actual queue
-							if qw.is_exchange?(ew.name)
-								q = @@bunny.queue(qw.name, {:durable => qw.durable?})
-								q.bind(ew.name, :key => qw.key)
-								qw.queue = q
-								@@queues[qw.fullname] = qw
-								log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
-							end
-						end
-					else
-						# producers don't need to define queues
-					end
 				else
 					log "exchange NOT created", exch: ew.name unless silent?
 				end
-			rescue => e
-				log_exception('initialize_exchange', e)
 			end
 		end
-		private_class_method :initialize_exchange
+		private_class_method :setup_exchanges
+
+		def self.setup_queues(queue_config_entries)
+			queue_config_entries.each do |queue_config|
+				qw = QueueWrapper.new(queue_config)
+				q = @@bunny.queue(qw.name, {:durable => qw.durable?})
+				if ew = @@exchanges[qw.exch]
+					q.bind(ew.name, :key => qw.key)
+					qw.queue = q
+					@@queues[qw.fullname] = qw
+					log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
+				end
+			end
+		end
+		private_class_method :setup_queues
 
 		def self.fullname(exch_name, queue_name)
 			"#{exch_name}|#{queue_name}"
