@@ -55,7 +55,7 @@ describe Mbus::Io do
 
 	it 'should implement method silent?' do
 		Mbus::Io.initialize('core', {:silent => true, :start_bunny => false})
-		Mbus::Io.silent?.should be_true
+		Mbus::Io.send(:silent?).should be_true
 	end
 
 	it 'should implement method start_bunny?' do
