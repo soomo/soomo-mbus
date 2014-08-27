@@ -34,7 +34,7 @@ describe Mbus::Io do
 
 	it 'should implement method classname' do
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.classname.should == 'Mbus::Io'
+		Mbus::Io.send(:classname).should == 'Mbus::Io'
 	end
 
 	it 'should implement method log_prefix' do
