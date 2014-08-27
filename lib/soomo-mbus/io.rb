@@ -43,10 +43,8 @@ module Mbus
 				puts "#{log_prefix}.starting - rabbitmq_url: #{url}" unless silent?
 				@@bunny = Bunny.new(url)
 				@@bunny.start
-				if Mbus::Config.initialize_exchanges?
-					Mbus::Config::exchange_entries_for_app(@@app_name).each { | exch_entry |
-						initialize_exchange(exch_entry)
-					}
+				Mbus::Config::exchange_entries_for_app(@@app_name).each do |exchange_config|
+					initialize_exchange(exchange_config)
 				end
 				puts "#{log_prefix}.start - completed" unless silent?
 				true

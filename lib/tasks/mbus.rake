@@ -71,7 +71,6 @@ def init_options
 	opts[:silent]  = false
 	opts[:rabbitmq_url] = ENV['rabbitmq_url'] if ENV['rabbitmq_url']
 	opts[:start_bunny]  = ENV['start_bunny']  if ENV['start_bunny']
-	opts[:initialize_exchanges] = ENV['init_exchanges'] if ENV['init_exchanges']
 	opts
 end
 
