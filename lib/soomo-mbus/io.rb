@@ -143,6 +143,7 @@ module Mbus
 		def self.fullname(exch_name, queue_name)
 			"#{exch_name}|#{queue_name}"
 		end
+		private_class_method :fullname
 
 		def self.send_message(exch_name, json_str_msg, routing_key)
 			result = nil
