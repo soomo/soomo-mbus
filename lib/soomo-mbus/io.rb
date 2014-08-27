@@ -32,8 +32,8 @@ module Mbus
 					puts "#{log_prefix}.start; stopping the previous @@bunny" unless silent?
 					@@bunny.stop
 				end
-			rescue Exception => e1
-				puts "#{log_prefix}.start Exception - #{e1.message} #{e1.inspect}" unless silent?
+			rescue => e
+				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
 				false
 			end
 
@@ -48,18 +48,19 @@ module Mbus
 				end
 				puts "#{log_prefix}.start - completed" unless silent?
 				true
-			rescue Bunny::ServerDownError => excp
-				puts "#{log_prefix}.start Exception - #{excp.message} #{excp.inspect}" unless silent?
+			rescue Bunny::ServerDownError => e
+				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
 				tries += 1
 				if tries <= 3
 					sleep(tries) # 1, 2, 3
 					retry
 				end
-			rescue Exception => excp
-				puts "#{log_prefix}.start Exception - #{excp.message} #{excp.inspect}" unless silent?
+			rescue => e
+				puts "#{log_prefix}.start Exception - #{e.message} #{e.inspect}" unless silent?
 				false
 			end
 		end
+
 
 		# Public: Disconnects from RabbitMQ broker.
 		def self.shutdown
@@ -67,6 +68,7 @@ module Mbus
 			@@bunny.stop if @@bunny
 			puts "#{log_prefix}.shutdown completed." unless silent?
 		end
+
 
 		# Public: Publishes a message to the message bus.
 		def self.send_message(exch_name, json_str_msg, routing_key)
@@ -82,11 +84,12 @@ module Mbus
 						puts "#{log_prefix}.send_message - invalid value(s) for exch #{exch_name}" unless silent?
 					end
 				end
-			rescue Exception => excp
-				puts "#{log_prefix}.send_message Exception - #{excp.message} #{excp.inspect}"
+			rescue => e
+				puts "#{log_prefix}.send_message Exception - #{e.message} #{e.inspect}"
 			end
 			result
 		end
+
 
 		# Public: Reads a message from the message bus.
 		def self.read_message(exch_name, queue_name)
@@ -97,11 +100,12 @@ module Mbus
 						payload = queue.next_message[:payload]
 					end
 				end
-			rescue Exception => e
+			rescue => e
 				puts exception_message('read_message', e, exch_name, queue_name)
 			end
 			payload
 		end
+
 
 		# Internal: Acks last message received from queue.
 		def self.ack_queue(exch_name, queue_name)
@@ -111,8 +115,8 @@ module Mbus
 						queue.ack
 					end
 				end
-			rescue Exception => excp
-				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
+			rescue => e
+				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{e.message} #{e.inspect}"
 			end
 		end
 
@@ -193,8 +197,8 @@ module Mbus
 				else
 					puts "#{log_prefix}.initialize_exchange - exchange NOT created '#{ew.name}'" unless silent?
 				end
-			rescue Exception => excp
-				puts "#{log_prefix}.initialize_exchange Exception - #{excp.message} #{excp.inspect}" unless silent?
+			rescue => e
+				puts "#{log_prefix}.initialize_exchange Exception - #{e.message} #{e.inspect}" unless silent?
 			end
 		end
 		private_class_method :initialize_exchange
