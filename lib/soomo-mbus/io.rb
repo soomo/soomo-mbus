@@ -70,10 +70,12 @@ module Mbus
 		def self.exchanges
 			@@exchanges
 		end
+		private_class_method :exchanges
 
 		def self.queues
 			@@queues
 		end
+		private_class_method :queues
 
 		def self.classname
 			'Mbus::Io'

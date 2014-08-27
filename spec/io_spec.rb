@@ -79,41 +79,47 @@ describe Mbus::Io do
 	it 'producer apps should have exchanges but no queues' do
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', @opts)
-		Mbus::Io.exchanges.should_not be_nil
-		Mbus::Io.exchanges.size.should == 2
 
-		ew = Mbus::Io.exchanges['logs']
+		exchanges = Mbus::Io.send(:exchanges)
+		exchanges.should_not be_nil
+		exchanges.size.should == 2
+
+		ew = exchanges['logs']
 		ew.should_not be_nil
 		ew.exchange.should_not be_nil
 
-		ew = Mbus::Io.exchanges['soomo']
+		ew = exchanges['soomo']
 		ew.should_not be_nil
 		ew.exchange.should_not be_nil
 		ew.persistent?.should be_true
 
 		# TODO
-		# Mbus::Io.queues.should_not be_nil
-		# Mbus::Io.queues.size.should == 0
+		#queues = Mbus::Io.send(:queues)
+		#queues.should_not be_nil
+		#queues.size.should == 0
 	end
 
 	it 'consumer apps should have exchanges and queues' do
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', @opts)
-		Mbus::Io.exchanges.should_not be_nil
-		Mbus::Io.exchanges.size.should == 2
 
-		ew = Mbus::Io.exchanges['logs']
+		exchanges = Mbus::Io.send(:exchanges)
+		exchanges.should_not be_nil
+		exchanges.size.should == 2
+
+		ew = exchanges['logs']
 		ew.should_not be_nil
 		ew.exchange.should_not be_nil
 
-		ew = Mbus::Io.exchanges['soomo']
+		ew = exchanges['soomo']
 		ew.should_not be_nil
 		ew.exchange.should_not be_nil
 		ew.persistent?.should be_true
 
-		Mbus::Io.queues.should_not be_nil
-		Mbus::Io.queues.size.should == 1
-		qw = Mbus::Io.queues['logs|messages']
+		queues = Mbus::Io.send(:queues)
+		queues.should_not be_nil
+		queues.size.should == 1
+		qw = queues['logs|messages']
 		qw.should_not be_nil
 		qw.exch.should == 'logs'
 		qw.name.should == 'messages'
