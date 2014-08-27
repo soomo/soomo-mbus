@@ -8,93 +8,6 @@ end
 
 namespace :mbus do
 
-	namespace :config do
-
-		desc "Create the configuration JSON"
-		task :create => :environment do
-			opts = {}
-			opts[:version] = ENV['v']
-			opts[:default_exchange] = 'soomo'
-			@json_str = Mbus::ConfigBuilder.new(opts).build
-			puts "========== Beginning of Config JSON =========="
-			puts @json_str
-			puts "========== End of Config JSON =========="
-
-			json_obj = JSON.parse(@json_str)
-			validator = Mbus::ConfigValidator.new(json_obj)
-			@valid = validator.valid?
-			puts "JSON Config validation successful?: #{@valid}"
-			validator.errors.each { | msg | puts "ERROR: #{msg}" }
-			validator.warnings.each { | msg | puts "warning: #{msg}" }
-			validator.report
-		end
-
-		desc "Create then deploy the configuration JSON, loc="
-		task :deploy => :create do
-			loc = ENV['loc']
-			loc = ENV['MBUS_HOME'] if loc.nil?
-			loc = 'redis://localhost:6379/#MBUS_CONFIG' if loc.nil?
-			if @valid
-				if @json_str && @json_str.size > 0
-					result = Mbus::Config.set_config(loc, @json_str)
-					puts "Mbus::Config.set_config successful?: #{result} location: #{loc}"
-				else
-					puts "error: json_str is empty; didn't save it to Redis"
-				end
-			else
-				puts "error: the json is invalid; didn't save it to Redis"
-			end
-		end
-
-		desc "Display the deployed configuration JSON"
-		task :display_deployed => :environment do
-			loc = ENV['loc']
-			loc = ENV['MBUS_HOME'] if loc.nil?
-			loc = 'redis://localhost:6379/#MBUS_CONFIG' if loc.nil?
-			if loc.include?('^')
-				tokens = loc.split('^')
-				loc = tokens[0]
-			end
-			tokens = loc.split('#')
-			redis_url, redis_key = tokens[0], tokens[1]
-			begin
-				uri = URI.parse(redis_url)
-				redis = Redis.new(:host => uri.host,
-													:port => uri.port,
-													:password => uri.password)
-				json_str = redis.get(redis_key)
-
-				puts "========== Beginning of Config JSON at location #{loc} =========="
-				if json_str.nil?
-					puts "nil"
-				else
-					puts json_str
-				end
-				puts "========== End of Config JSON at location #{loc} =========="
-
-				json_obj = JSON.parse(json_str)
-				validator = Mbus::ConfigValidator.new(json_obj)
-				valid = validator.valid?
-				puts "JSON Config validation successful?: #{valid}"
-				validator.errors.each { | msg | puts "ERROR: #{msg}" }
-				validator.warnings.each { | msg | puts "warning: #{msg}" }
-				validator.report
-			rescue Exception => e
-				puts "Exception - #{e.message} #{e.inspect}"
-			end
-		end
-
-		desc "Setup the exchanges and queues per the centralized config."
-		task :setup => :environment do
-			app = ENV['app'] ||= 'all'
-			ENV['MBUS_APP'] = app
-			opts = {:verbose => true, :silent => false}
-			Mbus::Io.initialize(app, opts)
-			Mbus::Io.shutdown
-		end
-
-	end
-
 	desc "Display the status of the Mbus"
 	task :status => :environment do
 		app = ENV['app'] ||= 'all'
@@ -125,8 +38,8 @@ namespace :mbus do
 		Mbus::Io.initialize(app, init_options)
 		count.to_i.times do | i |
 			actual = actual + 1
-			msg  = create_message(actual, body="msg sent to key #{unwild_key(key)}")
-			msg_sent = producer.send(msg, "log_message")
+			msg  = create_message(actual, "msg sent to key #{unwild_key(key)}")
+			producer.send(msg, "log_message")
 		end
 		Mbus::Io.shutdown
 	end
@@ -151,7 +64,6 @@ namespace :mbus do
 	task :read_messages_from_all => :environment do
 		app    = ENV['app'] ||= 'all'
 		count  = ENV['n']   ||= '5'
-		actual = 0
 		Mbus::Io.initialize(app, init_options)
 		Mbus::Config.exchange_entries_for_app(app).each { | entry |
 			exch_name = entry['name']
