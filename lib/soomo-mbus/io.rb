@@ -13,16 +13,15 @@ module Mbus
 		# Public: Initializes IO singletone to communicate with RabbitMQ broker.
 		def self.initialize(app_name=nil, opts={})
 			@@options  = opts
-			@@app_name = app_name
-			@@app_name = ENV['MBUS_APP'] if @@app_name.nil? # See Procfile or Rails initializer for MBUS_APP.
-			if (@@app_name.nil?)
-				puts "#{classname}.initialize ERROR - unable to determine MBUS_APP name" unless silent?
+			@@app_name = app_name || ENV['MBUS_APP']
+
+			if @@app_name.nil?
+				puts "component=mbus at=error message=\"unable to determine MBUS_APP name\"" unless silent?
 				return
 			end
-			puts "#{log_prefix}.initialize starting" unless silent?
+
 			Mbus::Config.initialize(@@app_name, options)
-			started = (start_bunny?) ? start : false
-			puts "#{log_prefix}.initialize - completed, bunny started: #{started}" unless silent?
+			start_bunny? ? start : false
 		end
 
 		# Public: Connects to RabbitMQ broker and setups exchanges and queues.
