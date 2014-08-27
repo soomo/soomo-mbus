@@ -266,7 +266,6 @@ callback examples using the sqlite database.
     rake mbus:delete_exchange          # Delete the given exchange, e=
     rake mbus:read_messages            # Read messages; a= e= q= n=
     rake mbus:read_messages_from_all   # Read messages from all exchanges and keys, n=
-    rake mbus:sample_process           # Start the SampleConsumerProcess
     rake mbus:send_messages            # Send message(s), e= k= n=
     rake mbus:status                   # Display the status of the Mbus
 

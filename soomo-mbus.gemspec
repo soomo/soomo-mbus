@@ -39,7 +39,6 @@ Gem::Specification.new do |s|
 	s.files << 'lib/soomo-mbus/io.rb'
 	s.files << 'lib/soomo-mbus/producer.rb'
 	s.files << 'lib/soomo-mbus/queue_wrapper.rb'
-	s.files << 'lib/soomo-mbus/sample_consumer_process.rb'
 	s.files << 'lib/soomo-mbus/version.rb'
 	s.files << 'lib/tasks/mbus.rake'
 

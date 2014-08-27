@@ -91,12 +91,6 @@ namespace :mbus do
 		end
 	end
 
-	desc "Start the SampleConsumerProcess"
-	task :sample_process => :environment do
-		ENV['MBUS_APP'] = ENV['app'] ||= 'logging-consumer'
-		Mbus::SampleConsumerProcess.new.process_loop
-	end
-
 end
 
 def init_options
