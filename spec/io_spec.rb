@@ -123,7 +123,7 @@ describe Mbus::Io do
 	it 'should implement method fullname' do
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', @opts)
-		Mbus::Io.fullname('exch', 'queue92').should == 'exch|queue92'
+		Mbus::Io.send(:fullname, 'exch', 'queue92').should == 'exch|queue92'
 	end
 
 	it 'should send messages, read messages, and ack messages' do
