@@ -88,19 +88,6 @@ module Mbus
 			result
 		end
 
-		# Internal: Acks last message received from queue.
-		def self.ack_queue(exch_name, queue_name)
-			begin
-				with_reconnect_on_failure('ack_queue') do
-					if queue = @@queues[fullname(exch_name, queue_name)]
-						queue.ack
-					end
-				end
-			rescue Exception => excp
-				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
-			end
-		end
-
 		# Public: Reads a message from the message bus.
 		def self.read_message(exch_name, queue_name)
 			payload = nil
@@ -114,6 +101,19 @@ module Mbus
 				puts exception_message('read_message', e, exch_name, queue_name)
 			end
 			payload
+		end
+
+		# Internal: Acks last message received from queue.
+		def self.ack_queue(exch_name, queue_name)
+			begin
+				with_reconnect_on_failure('ack_queue') do
+					if queue = @@queues[fullname(exch_name, queue_name)]
+						queue.ack
+					end
+				end
+			rescue Exception => excp
+				puts "#{log_prefix}.ack_queue Exception on exch: #{exch_name} queue: #{queue_name} - #{excp.message} #{excp.inspect}"
+			end
 		end
 
 
