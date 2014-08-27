@@ -82,6 +82,7 @@ module Mbus
 		def self.app_name
 			@@app_name
 		end
+		private_class_method :app_name
 
 		def self.log_prefix
 			"#{app_name} #{classname}"
