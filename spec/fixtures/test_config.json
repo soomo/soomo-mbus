@@ -1,0 +1,222 @@
+{
+	"version": "2012-03-02 09:48:51 -0500",
+	"exchanges": [
+		{
+			"name": "soomo",
+			"type": "topic",
+			"persistent": true,
+			"mandatory": false,
+			"immediate": false
+		},
+		{
+			"name": "logs",
+			"persistent": true,
+			"type": "topic",
+			"mandatory": false,
+			"immediate": false
+		}
+	],
+	"queues": [
+		{
+			"name": "student_responses",
+			"key": "#.action-response_broadcast",
+			"exch": "soomo",
+			"durable": true,
+			"ack": true
+		},
+		{
+			"name": "blackboard-grade",
+			"key": "#.action-grade_broadcast",
+			"exch": "soomo",
+			"durable": true,
+			"ack": true
+		},
+		{
+			"name": "sle-student",
+			"key": "#.object-student.#",
+			"exch": "soomo",
+			"durable": true,
+			"ack": true
+		},
+		{
+			"name": "sle-discussion",
+			"key": "#.object-discussion.#",
+			"exch": "soomo",
+			"durable": true,
+			"ack": true
+		},
+		{
+			"exch": "logs",
+			"name": "messages",
+			"ack": true,
+			"key": "#.action-log_message",
+			"durable": true
+		}
+	],
+	"business_functions": [
+		{
+			"app": "core",
+			"object": "grade",
+			"action": "grade_create",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-grade.action-grade_create"
+		},
+		{
+			"app": "core",
+			"object": "grade",
+			"action": "grade_update",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-grade.action-grade_update"
+		},
+		{
+			"app": "core",
+			"object": "grade",
+			"action": "grade_exception",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-grade.action-grade_exception"
+		},
+		{
+			"app": "core",
+			"object": "student",
+			"action": "student_create",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-student.action-student_create"
+		},
+		{
+			"app": "core",
+			"object": "student",
+			"action": "student_update",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-student.action-student_update"
+		},
+		{
+			"app": "core",
+			"object": "student",
+			"action": "student_destroy",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-student.action-student_destroy"
+		},
+		{
+			"app": "core",
+			"object": "student",
+			"action": "student_exception",
+			"exch": "soomo",
+			"routing_key": "soomo.app-core.object-student.action-student_exception"
+		},
+		{
+			"app": "sle",
+			"object": "grade",
+			"action": "grade_create",
+			"exch": "soomo",
+			"routing_key": "soomo.app-sle.object-grade.action-grade_create"
+		},
+		{
+			"app": "sle",
+			"object": "grade",
+			"action": "grade_update",
+			"exch": "soomo",
+			"routing_key": "soomo.app-sle.object-grade.action-grade_update"
+		},
+		{
+			"app": "sle",
+			"object": "grade",
+			"action": "grade_exception",
+			"exch": "soomo",
+			"routing_key": "soomo.app-sle.object-grade.action-grade_exception"
+		},
+		{
+			"app": "sle",
+			"object": "hash",
+			"action": "grade_broadcast",
+			"exch": "soomo",
+			"routing_key": "soomo.app-sle.object-hash.action-grade_broadcast"
+		},
+		{
+			"app": "sle",
+			"object": "hash",
+			"action": "response_broadcast",
+			"exch": "soomo",
+			"routing_key": "soomo.app-sle.object-hash.action-response_broadcast"
+		},
+		{
+			"app": "discussions",
+			"object": "discussion",
+			"action": "discussion_create",
+			"exch": "soomo",
+			"routing_key": "soomo.app-discussions.object-discussion.action-discussion_create"
+		},
+		{
+			"app": "discussions",
+			"object": "discussion",
+			"action": "discussion_comment",
+			"exch": "soomo",
+			"routing_key": "soomo.app-discussions.object-discussion.action-discussion_comment"
+		},
+		{
+			"app": "discussions",
+			"object": "discussion",
+			"action": "discussion_exception",
+			"exch": "soomo",
+			"routing_key": "soomo.app-discussions.object-discussion.action-discussion_exception"
+		},
+		{
+			"exch": "logs",
+			"app": "core",
+			"object": "string",
+			"action": "log_message",
+			"routing_key": "logs.app-core.object-string.action-log_message"
+		},
+		{
+			"exch": "logs",
+			"app": "core",
+			"object": "hash",
+			"action": "log_message",
+			"routing_key": "logs.app-core.object-hash.action-log_message"
+		},
+		{
+			"exch": "logs",
+			"app": "sle",
+			"object": "hash",
+			"action": "log_message",
+			"routing_key": "logs.app-sle.object-hash.action-log_message"
+		},
+		{
+			"exch": "logs",
+			"app": "cac",
+			"object": "hash",
+			"action": "log_message",
+			"routing_key": "logs.app-cac.object-hash.action-log_message"
+		}
+	],
+	"consumer_processes": [
+		{
+			"app": "ca",
+			"name": "ca-consumer",
+			"queues": [
+				"soomo|student_responses"
+			]
+		},
+		{
+			"app": "sle",
+			"name": "sle-consumer",
+			"queues": [
+				"soomo|sle-student",
+				"soomo|sle-discussion"
+			]
+		},
+		{
+			"app": "bb-pusher",
+			"name": "bb-pusher-consumer",
+			"queues": [
+				"soomo|blackboard-grade"
+			]
+		},
+		{
+			"app": "core",
+			"name": "logging-consumer",
+			"queues": [
+				"logs|messages"
+			]
+		}
+	]
+}
