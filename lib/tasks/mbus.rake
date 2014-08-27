@@ -8,19 +8,6 @@ end
 
 namespace :mbus do
 
-	desc "Display the status of the Mbus"
-	task :status => :environment do
-		app = ENV['app'] ||= 'all'
-		ENV['MBUS_APP'] = app
-		opts = {:verbose => true, :silent => false}
-		Mbus::Io.initialize(app, opts)
-		hash = Mbus::Io.status
-		hash.keys.sort.each { | fname |
-			puts "exch/queue #{fname} = #{hash[fname]}"
-		}
-		Mbus::Io.shutdown
-	end
-
 	desc "Send message(s), e= k= n="
 	task :send_messages => :environment do
 		app    = ENV['app'] ||= 'core'

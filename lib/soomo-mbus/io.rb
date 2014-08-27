@@ -163,20 +163,6 @@ module Mbus
 			result
 		end
 
-		def self.status
-			hash = {}
-			begin
-				@@queues.keys.sort.each do |fullname|
-					if queue = @@queues[fullname]
-						hash[fullname] = queue.status
-					end
-				end
-			rescue Exception => excp
-				puts "#{log_prefix}.status Exception - #{excp.message} #{excp.inspect}"
-			end
-			hash
-		end
-
 		def self.ack_queue(exch_name, queue_name)
 			begin
 				with_reconnect_on_failure('ack_queue') do
