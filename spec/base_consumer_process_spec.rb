@@ -126,7 +126,6 @@ describe Mbus::BaseConsumerProcess do
 		# First, drain the queue of messages.
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'logging-consumer'
 		continue_to_process = true
 		while continue_to_process
 			msg = Mbus::Io.read_message('logs', 'messages')
@@ -142,7 +141,6 @@ describe Mbus::BaseConsumerProcess do
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'core'
 		tp = TestProducer.new
 		13.times do | i |
 			data = {:n => i, :epoch => Time.now.to_i}
@@ -176,7 +174,6 @@ describe Mbus::BaseConsumerProcess do
 		# First, drain the queue of messages.
 		ENV['MBUS_APP'] = 'logging-consumer'
 		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'logging-consumer'
 		continue_to_process = true
 		while continue_to_process
 			msg = Mbus::Io.read_message('logs', 'messages')
@@ -227,7 +224,7 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', verbose: false, silent: true)
 		producer = TestProducer.new
-		message = producer.doit({ exception: 'boom' }, 'log_message')
+		_message = producer.doit({ exception: 'boom' }, 'log_message')
 		Mbus::Io.shutdown
 
 		# read off the exceptional message
