@@ -23,14 +23,6 @@ echo '*** mbus:config:setup'
 rake mbus:config:setup --trace
 
 echo '---'
-echo '*** mbus:status'
-rake mbus:status --trace
-
-echo '---'
-echo '*** mbus:delete_exchange'
-rake mbus:delete_exchange e=obsolete --trace
-
-echo '---'
 echo '*** send_messages'
 rake mbus:send_messages n=10 --trace
 
