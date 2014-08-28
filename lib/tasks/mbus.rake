@@ -95,14 +95,14 @@ def read_loop(ename, qname, count)
 	while continue_to_process
 		msg = Mbus::Io.read_message(ename, qname)
 		if msg && (msg != :queue_empty)
-			Mbus::Io.ack_queue(ename, qname)
+			Mbus::Io.acknowledge_message(msg)
 		end
 		if (msg == :queue_empty) || msg.nil?
 			continue_to_process = false
 			puts "exch: #{ename} queue: #{qname} - empty"
 		else
 			actual = actual + 1
-			puts "exch: #{ename} queue: #{qname} - msg #{actual}: #{msg}"
+			puts "exch: #{ename} queue: #{qname} - msg #{actual}: #{msg.payload}"
 		end
 		if actual >= count.to_i
 			continue_to_process = false

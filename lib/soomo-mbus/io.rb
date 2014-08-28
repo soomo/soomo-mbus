@@ -94,30 +94,28 @@ module Mbus
 
 		# Public: Reads a message from the message bus.
 		def self.read_message(exch_name, queue_name)
-			payload = nil
+			message = nil
 			begin
 				with_reconnect_on_failure('read_message') do
 					if queue = @@queues[fullname(exch_name, queue_name)]
-						payload = queue.next_message[:payload]
+						message = queue.next_message
 					end
 				end
 			rescue => e
 				log_exception_message('read_message', e, exch_name, queue_name)
 			end
-			payload
+			message
 		end
 
 
 		# Internal: Acks last message received from queue.
-		def self.ack_queue(exch_name, queue_name)
+		def self.acknowledge_message(message)
 			begin
 				with_reconnect_on_failure('ack_queue') do
-					if queue = @@queues[fullname(exch_name, queue_name)]
-						queue.ack
-					end
+					message.queue.ack
 				end
 			rescue => e
-				log_exception_message('ack_queue', e, exch_name, queue_name)
+				log_exception_message('ack_queue', e, message.queue.exch, message.queue.name)
 			end
 		end
 
@@ -224,6 +222,7 @@ module Mbus
 
 		def self.log_exception(method, e)
 			log :error, e.message, method: method, exception: e.inspect unless silent?
+			#puts e.backtrace.join("\n") unless silent?
 		end
 		private_class_method :log_exception
 

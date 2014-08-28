@@ -117,7 +117,7 @@ describe Mbus::BaseConsumerProcess do
 				continue_to_process = false
 			else
 				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.ack_queue('logs', 'messages')
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
@@ -165,7 +165,7 @@ describe Mbus::BaseConsumerProcess do
 				continue_to_process = false
 			else
 				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.ack_queue('logs', 'messages')
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
