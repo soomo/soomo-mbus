@@ -211,8 +211,10 @@ module Mbus
 		private_class_method :fullname
 
 		def self.exception_message(method, exception, exchange_name='N/A', queue_name='N/A')
-			"#{log_prefix}.#{method} Exception on exch: #{exchange_name} queue: #{queue_name}" +
-			" - #{exception.message}\n#{exception.inspect}"
+			message = "#{log_prefix}.#{method} Exception on exch: #{exchange_name} queue: #{queue_name}"
+			message << " - #{exception.message}\n#{exception.inspect}"
+			message << "\n" << exception.backtrace.join("\n") if ENV['DEBUG']
+			message
 		end
 		private_class_method :exception_message
 
@@ -222,7 +224,7 @@ module Mbus
 
 		def self.log_exception(method, e)
 			log :error, e.message, method: method, exception: e.inspect unless silent?
-			#puts e.backtrace.join("\n") unless silent?
+			puts e.backtrace.join("\n") unless (silent? && ENV['DEBUG'])
 		end
 		private_class_method :log_exception
 
