@@ -2,6 +2,29 @@ require 'spec_helper'
 
 # rake spec SPEC=spec/io_spec.rb
 
+def flush_message_bus
+	ENV['MBUS_APP'] = 'logging-consumer'
+
+	continue_to_process = true
+	messages = []
+
+	Mbus::Io.initialize('logging-consumer', @opts)
+	while continue_to_process
+		msg = Mbus::Io.read_message('logs', 'messages')
+		if (msg == :queue_empty) || msg.nil?
+			continue_to_process = false
+		else
+			messages << msg.payload
+			Mbus::Io.acknowledge_message(msg)
+		end
+
+		yield messages.size if block_given?
+	end
+	Mbus::Io.shutdown
+
+	return messages
+end
+
 describe Mbus::Io do
 
 	before(:all) do
@@ -133,19 +156,7 @@ describe Mbus::Io do
 	end
 
 	it 'should send messages, read messages, and ack messages' do
-		# First, drain the queue of messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', @opts)
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
@@ -159,55 +170,19 @@ describe Mbus::Io do
 		Mbus::Io.shutdown
 
 		# Next, read and verify the new messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', @opts)
-		continue_to_process, messages = true, []
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				messages << msg.payload
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		messages = flush_message_bus
 		messages.size.should == 3
 		messages[0].should == msg1
 		messages[1].should == msg2
 		messages[2].should == msg3
 
 		# Next, read again, there should be no more messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', @opts)
-		continue_to_process, messages = true, []
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				messages << msg.payload
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		messages = flush_message_bus
 		messages.size.should == 0
 	end
 
 	it "should handle a disconnect when reading from a queue" do
-		# Flush message bus.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', @opts)
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
@@ -221,28 +196,12 @@ describe Mbus::Io do
 		Mbus::Io.shutdown
 
 		# Now, read some messages, disconnecting partway through.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', @opts)
-		continue_to_process = true
-
-		messages_read = 0
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				messages_read += 1
-				Mbus::Io.acknowledge_message(msg)
-			end
-
+		messages = flush_message_bus do |messages_read|
 			if messages_read == 1
 				Mbus::Io.shutdown # stops bunny which should yield connection error
 			end
 		end
-		Mbus::Io.shutdown
-
-		messages_read.should == 3
+		messages.size.should == 3
 	end
 
 end
