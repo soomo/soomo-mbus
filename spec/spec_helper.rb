@@ -46,3 +46,27 @@ end
 def test_config_json
 	@test_config_json ||= File.read File.expand_path('../fixtures/test_config.json', __FILE__)
 end
+
+def flush_message_bus
+	ENV['MBUS_APP'] = 'logging-consumer'
+	opts = {:start_bunny => true, :verbose => false, :silent => true}
+
+	continue_to_process = true
+	messages = []
+
+	Mbus::Io.initialize('logging-consumer', opts)
+	while continue_to_process
+		msg = Mbus::Io.read_message('logs', 'messages')
+		if (msg == :queue_empty) || msg.nil?
+			continue_to_process = false
+		else
+			messages << msg.payload
+			Mbus::Io.acknowledge_message(msg)
+		end
+
+		yield messages.size if block_given?
+	end
+	Mbus::Io.shutdown
+
+	return messages
+end

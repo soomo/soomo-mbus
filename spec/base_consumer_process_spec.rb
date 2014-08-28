@@ -108,19 +108,7 @@ describe Mbus::BaseConsumerProcess do
 
 	it 'should execute its run loop with no sleeps' do
 		# First, drain the queue of messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
@@ -156,19 +144,7 @@ describe Mbus::BaseConsumerProcess do
 
 	it "should execute its run process with at least 1 sleep" do
 		# First, drain the queue of messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.acknowledge_message(msg)
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Run the consumer
 		ENV['MBUS_APP'] = 'logging-consumer'
@@ -226,4 +202,3 @@ describe Mbus::BaseConsumerProcess do
 	end
 
 end
-
