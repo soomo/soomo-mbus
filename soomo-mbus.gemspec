@@ -37,6 +37,7 @@ Gem::Specification.new do |s|
 	s.files << 'lib/soomo-mbus/base_message_handler.rb'
 	s.files << 'lib/soomo-mbus/exchange_wrapper.rb'
 	s.files << 'lib/soomo-mbus/io.rb'
+	s.files << 'lib/soomo-mbus/message.rb'
 	s.files << 'lib/soomo-mbus/producer.rb'
 	s.files << 'lib/soomo-mbus/queue_wrapper.rb'
 	s.files << 'lib/soomo-mbus/version.rb'

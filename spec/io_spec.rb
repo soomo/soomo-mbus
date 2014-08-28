@@ -142,7 +142,7 @@ describe Mbus::Io do
 			if (msg == :queue_empty) || msg.nil?
 				continue_to_process = false
 			else
-				Mbus::Io.ack_queue('logs', 'messages')
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
@@ -167,8 +167,8 @@ describe Mbus::Io do
 			if (msg == :queue_empty) || msg.nil?
 				continue_to_process = false
 			else
-				messages << msg
-				Mbus::Io.ack_queue('logs', 'messages')
+				messages << msg.payload
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
@@ -186,8 +186,8 @@ describe Mbus::Io do
 			if (msg == :queue_empty) || msg.nil?
 				continue_to_process = false
 			else
-				messages << msg
-				Mbus::Io.ack_queue('logs', 'messages')
+				messages << msg.payload
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
@@ -204,7 +204,7 @@ describe Mbus::Io do
 			if (msg == :queue_empty) || msg.nil?
 				continue_to_process = false
 			else
-				Mbus::Io.ack_queue('logs', 'messages')
+				Mbus::Io.acknowledge_message(msg)
 			end
 		end
 		Mbus::Io.shutdown
@@ -233,7 +233,7 @@ describe Mbus::Io do
 				continue_to_process = false
 			else
 				messages_read += 1
-				Mbus::Io.ack_queue('logs', 'messages')
+				Mbus::Io.acknowledge_message(msg)
 			end
 
 			if messages_read == 1
