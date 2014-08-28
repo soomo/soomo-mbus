@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
 
 	s.add_dependency 'soomo-mbus-configuration'
 
-	s.add_runtime_dependency 'bunny', '0.7.8'
+	s.add_runtime_dependency 'bunny', '~> 1.4.0'
 	s.add_runtime_dependency 'json'
 	s.add_runtime_dependency 'redis'
 

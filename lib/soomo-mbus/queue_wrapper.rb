@@ -56,17 +56,13 @@ module Mbus
 		end
 
 		def next_message
-			message = queue.pop(:ack => ack?, :nowait => nowait?)
+			delivery_info, properties, payload = queue.pop(:ack => ack?, :nowait => nowait?)
 
-			if message[:payload] == :queue_empty
-				:queue_empty
+			if payload
+				Message.new(queue, delivery_info, properties, payload, ack: ack?)
 			else
-				Message.new(queue, message[:payload], ack: ack?)
+				:queue_empty
 			end
-		end
-
-		def ack
-			queue.ack if ack?
 		end
 	end
 

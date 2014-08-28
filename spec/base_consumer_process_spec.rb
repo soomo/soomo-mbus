@@ -11,6 +11,7 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_QE_TIME']  = nil
 		ENV['MBUS_MAX_SLEEPS'] = nil
 		@opts = {:test_mode => true, :start_bunny => false, :silent => true}
+		Mbus::Io.shutdown # ensure we're not running
 	end
 
 	it 'should determine its name from environment variable MBUS_APP' do

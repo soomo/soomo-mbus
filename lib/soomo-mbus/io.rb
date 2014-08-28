@@ -48,7 +48,7 @@ module Mbus
 				log :info, "setup exchanges and queues" unless silent?
 
 				true
-			rescue Bunny::ServerDownError => e
+			rescue Bunny::TCPConnectionFailed => e
 				log_exception('start', e)
 				tries += 1
 				if tries <= 3
@@ -112,7 +112,7 @@ module Mbus
 		def self.acknowledge_message(message)
 			begin
 				with_reconnect_on_failure('ack_queue') do
-					message.queue.ack
+					message.queue.channel.acknowledge(message.delivery_info.delivery_tag)
 				end
 			rescue => e
 				log_exception_message('ack_queue', e, message.queue.exch, message.queue.name)
@@ -241,7 +241,7 @@ module Mbus
 			delay = 1
 			begin
 				yield
-			rescue Bunny::ProtocolError, Bunny::ConnectionError => e
+			rescue Bunny::Exception => e
 				log_exception_message(method, e)
 				retries += 1
 				if retries <= 6 # will sleep at most 2^6 = 64s before process dies.
