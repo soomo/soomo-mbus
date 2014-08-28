@@ -2,29 +2,6 @@ require 'spec_helper'
 
 # rake spec SPEC=spec/io_spec.rb
 
-def flush_message_bus
-	ENV['MBUS_APP'] = 'logging-consumer'
-
-	continue_to_process = true
-	messages = []
-
-	Mbus::Io.initialize('logging-consumer', @opts)
-	while continue_to_process
-		msg = Mbus::Io.read_message('logs', 'messages')
-		if (msg == :queue_empty) || msg.nil?
-			continue_to_process = false
-		else
-			messages << msg.payload
-			Mbus::Io.acknowledge_message(msg)
-		end
-
-		yield messages.size if block_given?
-	end
-	Mbus::Io.shutdown
-
-	return messages
-end
-
 describe Mbus::Io do
 
 	before(:all) do
