@@ -58,6 +58,7 @@ module Mbus
 				{:app => 'core', :object => 'hash', :action => 'enrollment_update'},
 				{:app => 'core', :object => 'hash', :action => 'external_event'},
 				{:app => 'core', :object => 'hash', :action => 'lti_launch_event'},
+				{:app => 'core', :object => 'hash', :action => 'work_request'},
 
 				{:app => 'core-consumer', :object => 'hash', :action => 'audit_document_response'},
 
@@ -75,6 +76,8 @@ module Mbus
 				{:app => 'ca-consumer', :object => 'hash', :action => 'audit_document_response'},
 
 				{:app => 'auditor', :object => 'hash', :action => 'audit_document_request'},
+
+				{:app => 'linux-worker', :object => 'hash', :action => 'worker_update'},
 
 				{:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
 				{:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
@@ -101,6 +104,7 @@ module Mbus
 				{:name => 'core-audit_document_requests', :key => '#.object-hash.action-audit_document_request.#'},
 				{:name => 'core-rebroadcast_response_updates', :key => '#.object-hash.action-rebroadcast_response_updates.#'},
 				{:name => 'core-external_event', :key => '#.object-hash.action-external_event.#'},
+				{:name => 'core-worker_update', :key => '#.object-hash.action-worker_update.#'},
 
 				{:name => 'ca-responses',    :key => '#.object-hash.action-response_update.#'},
 				{:name => 'ca-enrollments',  :key => '#.object-hash.action-enrollment_update.#'},
@@ -118,6 +122,8 @@ module Mbus
 				{:name => 'sle-rebroadcast_response_updates', :key => '#.object-hash.action-rebroadcast_response_updates.#'},
 
 				{:name => 'auditor-audit_document_responses', :key => '#.object-hash.action-audit_document_response.#'},
+
+				{:name => 'linux_worker-work_requests', :key => '#.object-hash.action-work_request.#'},
 
 				{:exch => 'logs', :name => 'status-messages', :ack => false, :key => '#.action-log_message'},
 
@@ -166,11 +172,15 @@ module Mbus
 					'soomo|core-ca_section_create',
 					'soomo|core-audit_document_requests',
 					'soomo|core-quiz_response_update',
-					'soomo|core-external_event'
+					'soomo|core-external_event',
+					'soomo|core-worker_update'
 				]},
 
 				{:app => 'auditor', :name => 'auditor-consumer',
 				 :queues => ['soomo|auditor-audit_document_responses']},
+
+				{:app => 'linux-worker', :name => 'linux-worker-consumer',
+				 :queues => ['soomo|linux_worker-work_requests']},
 
 				{:app => 'test', :name => 'test-consumer',
 				 :queues => ['test|test-messages']}
