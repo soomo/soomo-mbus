@@ -173,7 +173,7 @@ module Mbus
 					'soomo|core-audit_document_requests',
 					'soomo|core-quiz_response_update',
 					'soomo|core-external_event',
-					'soomo|core-work_update'
+					'soomo|core-worker_update'
 				]},
 
 				{:app => 'auditor', :name => 'auditor-consumer',
