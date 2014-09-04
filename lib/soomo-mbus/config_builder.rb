@@ -77,7 +77,7 @@ module Mbus
 
 				{:app => 'auditor', :object => 'hash', :action => 'audit_document_request'},
 
-				{:app => 'linux-worker', :object => 'hash', :action => 'worker_update'},
+				{:app => 'linux-worker-consumer', :object => 'hash', :action => 'worker_update'},
 
 				{:exch => 'logs', :app => 'core', :object => 'string', :action => 'log_message'},
 				{:exch => 'logs', :app => 'core', :object => 'hash',   :action => 'log_message'},
