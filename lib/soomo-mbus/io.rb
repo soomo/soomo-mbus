@@ -129,7 +129,7 @@ module Mbus
 					@@exchanges[ew.name] = ew
 					log :info, "created exchange", exch: ew.name unless silent?
 				else
-					log "exchange NOT created", exch: ew.name unless silent?
+					log :warn, "exchange NOT created", exch: ew.name unless silent?
 				end
 			end
 
@@ -146,7 +146,7 @@ module Mbus
 					q.bind(ew.name, :key => qw.key)
 					qw.queue = q
 					@@queues[qw.fullname] = qw
-					log "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
+					log :info, "bound queue to exchange", exch: ew.name, queue: qw.name, key: qw.key unless silent?
 				end
 			end
 
