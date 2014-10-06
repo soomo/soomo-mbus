@@ -17,7 +17,9 @@ Gem::Specification.new do |s|
 	s.required_rubygems_version = ">= 1.9.2"
 	s.rubyforge_project = "soomo-mbus"
 
-	s.add_runtime_dependency 'bunny', '0.7.8'
+	s.add_dependency 'soomo-mbus-configuration'
+
+	s.add_runtime_dependency 'bunny', '~> 1.4.0'
 	s.add_runtime_dependency 'json'
 	s.add_runtime_dependency 'redis'
 
@@ -33,14 +35,11 @@ Gem::Specification.new do |s|
 	s.files << 'lib/soomo-mbus.rb'
 	s.files << 'lib/soomo-mbus/base_consumer_process.rb'
 	s.files << 'lib/soomo-mbus/base_message_handler.rb'
-	s.files << 'lib/soomo-mbus/config.rb'
-	s.files << 'lib/soomo-mbus/config_builder.rb'
-	s.files << 'lib/soomo-mbus/config_validator.rb'
 	s.files << 'lib/soomo-mbus/exchange_wrapper.rb'
 	s.files << 'lib/soomo-mbus/io.rb'
+	s.files << 'lib/soomo-mbus/message.rb'
 	s.files << 'lib/soomo-mbus/producer.rb'
 	s.files << 'lib/soomo-mbus/queue_wrapper.rb'
-	s.files << 'lib/soomo-mbus/sample_consumer_process.rb'
 	s.files << 'lib/soomo-mbus/version.rb'
 	s.files << 'lib/tasks/mbus.rake'
 

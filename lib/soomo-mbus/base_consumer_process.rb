@@ -81,12 +81,12 @@ module Mbus
 				@cycles = cycles + 1
 				queues_list.each do |queue|
 					if queue.should_read?
-						serialized_message = Mbus::Io.read_message(queue.exch, queue.name)
-						if (serialized_message == :queue_empty) || serialized_message.nil?
+						message = Mbus::Io.read_message(queue.exch, queue.name)
+						if (message == :queue_empty) || message.nil?
 							handle_no_message(queue)
 						else
 							@messages_read = messages_read + 1
-							process_and_ack_message(queue, serialized_message)
+							process_and_ack_message(queue, message)
 						end
 					end
 				end
@@ -131,12 +131,12 @@ module Mbus
 			end
 		end
 
-		def process_and_ack_message(queue, serialized_message)
-			success = process_message(queue, serialized_message)
+		def process_and_ack_message(queue, message)
+			success = process_message(queue, message.payload)
 
-			if queue.ack?
+			if message.requires_acknowledgement?
 				if success
-					Mbus::Io.ack_queue(queue.exch, queue.name)
+					Mbus::Io.acknowledge_message(message)
 				else
 					logger.info "Failed to process message and ACK required. Exiting.."
 					@continue_to_process = false
@@ -180,31 +180,6 @@ module Mbus
 				classname_map[action] = classname
 			end
 			return classname
-		end
-
-		# Deprecated.
-		def handler_classname(message_hash)
-			classname_from_action(message_hash['action'])
-		end
-
-		# Deprecated.
-		def verbose?
-			@options[:verbose] == true
-		end
-
-		# Deprecated.
-		def silent?
-			@options[:silent] == true
-		end
-
-		# Deprecated.
-		def classname
-			self.class.name
-		end
-
-		# Deprecated.
-		def log_prefix
-			"#{app_name} #{classname}"
 		end
 
 		class Logger

@@ -263,12 +263,9 @@ callback examples using the sqlite database.
     rake mbus:config:deploy            # Create then deploy the configuration JSON, loc=
     rake mbus:config:display_deployed  # Display the deployed configuration JSON
     rake mbus:config:setup             # Setup the exchanges and queues per the centralized config.
-    rake mbus:delete_exchange          # Delete the given exchange, e=
     rake mbus:read_messages            # Read messages; a= e= q= n=
     rake mbus:read_messages_from_all   # Read messages from all exchanges and keys, n=
-    rake mbus:sample_process           # Start the SampleConsumerProcess
     rake mbus:send_messages            # Send message(s), e= k= n=
-    rake mbus:status                   # Display the status of the Mbus
 
     rake mbus_db:create                # Create the (example sqlite) database.
     rake mbus_db:create_grade          # Create a Grade(s), n=

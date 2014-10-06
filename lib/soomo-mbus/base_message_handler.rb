@@ -26,7 +26,7 @@ module Mbus
 		end
 
 		def log_prefix
-			"#{Mbus::Io.app_name} #{classname}"
+			"#{Mbus::Config.app_name} #{classname}"
 		end
 
 		def app

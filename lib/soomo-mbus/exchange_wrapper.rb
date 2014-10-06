@@ -53,10 +53,5 @@ module Mbus
 			exchange.publish(message, opts)
 		end
 
-		def delete(opts={})
-			exchange.delete(opts)
-		end
-
 	end
-
 end

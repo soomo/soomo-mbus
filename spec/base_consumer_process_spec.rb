@@ -11,6 +11,7 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_QE_TIME']  = nil
 		ENV['MBUS_MAX_SLEEPS'] = nil
 		@opts = {:test_mode => true, :start_bunny => false, :silent => true}
+		Mbus::Io.shutdown # ensure we're not running
 	end
 
 	it 'should determine its name from environment variable MBUS_APP' do
@@ -80,41 +81,25 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_APP'] = 'test_app'
 		process = Mbus::BaseConsumerProcess.new({:test_mode => false, :start_bunny => false, :silent => true})
 		process.app_name.should == 'test_app'
-		process.classname.should == 'Mbus::BaseConsumerProcess'
-		process.log_prefix.should == 'test_app Mbus::BaseConsumerProcess'
 		process.shutdown
 	end
 
-	it 'should implement method handler_classname' do
+	it 'should implement method classname_from_action' do
 		ENV['MBUS_APP'] = 'test_app'
 		process = Mbus::BaseConsumerProcess.new(@opts)
 
-		tp = TestProducer.new
-		data = {:group => "Salt-N-Pepa", :song => "Push It"}
-
-		json_str = tp.build_message('core', {}, 'some_action', 'soomo', 'a.b.c', data)
-		json_obj = JSON.parse(json_str)
 		process.classname_map.size.should == 0
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('some_action')
 		cn.should == 'SomeActionMessageHandler'
 		process.classname_map.size.should == 1
 		process.classname_map['some_action'].should == 'SomeActionMessageHandler'
 
-		json_str = tp.build_message('core', {}, 'awesome_possum', 'soomo', 'x.y.z', data)
-		json_obj = JSON.parse(json_str)
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('awesome_possum')
 		cn.should == 'AwesomePossumMessageHandler'
 		process.classname_map.size.should == 2
 		process.classname_map['awesome_possum'].should == 'AwesomePossumMessageHandler'
 
-		json_str = tp.build_message('core', {}, 'awesome-possum', 'soomo', 'x.y.z', data)
-		json_obj = JSON.parse(json_str)
-		cn = process.handler_classname(json_obj)
-		cn.should == 'AwesomePossumMessageHandler'
-		process.classname_map.size.should == 3
-		process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
-
-		cn = process.handler_classname(json_obj)
+		cn = process.classname_from_action('awesome-possum')
 		cn.should == 'AwesomePossumMessageHandler'
 		process.classname_map.size.should == 3
 		process.classname_map['awesome-possum'].should == 'AwesomePossumMessageHandler'
@@ -124,25 +109,11 @@ describe Mbus::BaseConsumerProcess do
 
 	it 'should execute its run loop with no sleeps' do
 		# First, drain the queue of messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'logging-consumer'
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.ack_queue('logs', 'messages')
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Next, send some new log messages
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'core'
 		tp = TestProducer.new
 		13.times do | i |
 			data = {:n => i, :epoch => Time.now.to_i}
@@ -174,20 +145,7 @@ describe Mbus::BaseConsumerProcess do
 
 	it "should execute its run process with at least 1 sleep" do
 		# First, drain the queue of messages.
-		ENV['MBUS_APP'] = 'logging-consumer'
-		Mbus::Io.initialize('logging-consumer', {:verbose => false, :silent => true})
-		Mbus::Io.app_name.should == 'logging-consumer'
-		continue_to_process = true
-		while continue_to_process
-			msg = Mbus::Io.read_message('logs', 'messages')
-			if (msg == :queue_empty) || msg.nil?
-				continue_to_process = false
-			else
-				#puts "base_consumer_process_spec draining msg: #{msg}"
-				Mbus::Io.ack_queue('logs', 'messages')
-			end
-		end
-		Mbus::Io.shutdown
+		flush_message_bus
 
 		# Run the consumer
 		ENV['MBUS_APP'] = 'logging-consumer'
@@ -227,7 +185,7 @@ describe Mbus::BaseConsumerProcess do
 		ENV['MBUS_APP'] = 'core'
 		Mbus::Io.initialize('core', verbose: false, silent: true)
 		producer = TestProducer.new
-		message = producer.doit({ exception: 'boom' }, 'log_message')
+		_message = producer.doit({ exception: 'boom' }, 'log_message')
 		Mbus::Io.shutdown
 
 		# read off the exceptional message
@@ -245,4 +203,3 @@ describe Mbus::BaseConsumerProcess do
 	end
 
 end
-
